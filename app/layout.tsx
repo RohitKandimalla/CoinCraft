@@ -7,11 +7,7 @@ export const metadata: Metadata = {
   description: 'A secure, local-first portfolio tracker for your investments',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -20,4 +16,3 @@ export default function RootLayout({
     </html>
   );
 }
-

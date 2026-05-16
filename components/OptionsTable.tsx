@@ -23,12 +23,24 @@ export function OptionsTable({ portfolio }: OptionsTableProps) {
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Contract</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">Qty</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">Mark</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">Avg Cost</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">Value</th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">P/L</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                Contract
+              </th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                Qty
+              </th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                Mark
+              </th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                Avg Cost
+              </th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                Value
+              </th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                P/L
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
@@ -36,12 +48,17 @@ export function OptionsTable({ portfolio }: OptionsTableProps) {
               const gain = option.unrealized_gain || 0;
               const positive = gain >= 0;
               return (
-                <tr key={`${option.provider_account_id}-${option.ticker}`} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                <tr
+                  key={`${option.provider_account_id}-${option.ticker}`}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                     <div>
                       <p>{option.ticker}</p>
                       {option.account_name && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{option.account_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {option.account_name}
+                        </p>
                       )}
                     </div>
                   </td>
@@ -49,7 +66,11 @@ export function OptionsTable({ portfolio }: OptionsTableProps) {
                     {option.quantity.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
-                    ${option.current_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    $
+                    {option.current_price.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </td>
                   <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
                     {option.average_price != null
@@ -59,8 +80,11 @@ export function OptionsTable({ portfolio }: OptionsTableProps) {
                   <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white">
                     ${option.market_value.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   </td>
-                  <td className={`px-6 py-4 text-right text-sm font-medium ${positive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {positive ? '+' : '-'}${Math.abs(gain).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                  <td
+                    className={`px-6 py-4 text-right text-sm font-medium ${positive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                  >
+                    {positive ? '+' : '-'}$
+                    {Math.abs(gain).toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   </td>
                 </tr>
               );
@@ -71,4 +95,3 @@ export function OptionsTable({ portfolio }: OptionsTableProps) {
     </div>
   );
 }
-

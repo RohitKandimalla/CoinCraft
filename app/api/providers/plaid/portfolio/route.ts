@@ -8,7 +8,9 @@ function sumNumbers(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0);
 }
 
-function calcNetContributions(amounts: Array<{ type: string; subtype: string; amount: number }>): number {
+function calcNetContributions(
+  amounts: Array<{ type: string; subtype: string; amount: number }>
+): number {
   let net = 0;
 
   for (const tx of amounts) {
@@ -17,13 +19,19 @@ function calcNetContributions(amounts: Array<{ type: string; subtype: string; am
     const amount = Number(tx.amount || 0);
 
     // Deposits/transfers/contributions increase lifetime contributed capital.
-    if ((type === 'cash' || type === 'transfer') && ['deposit', 'transfer', 'contribution'].includes(subtype)) {
+    if (
+      (type === 'cash' || type === 'transfer') &&
+      ['deposit', 'transfer', 'contribution'].includes(subtype)
+    ) {
       net += Math.abs(amount);
       continue;
     }
 
     // Withdrawals/distributions decrease lifetime contributed capital.
-    if ((type === 'cash' || type === 'transfer') && ['withdrawal', 'distribution'].includes(subtype)) {
+    if (
+      (type === 'cash' || type === 'transfer') &&
+      ['withdrawal', 'distribution'].includes(subtype)
+    ) {
       net -= Math.abs(amount);
       continue;
     }
@@ -46,9 +54,12 @@ function aggregateHoldingsByTicker(holdings: Holding[]): Holding[] {
     existing.market_value += holding.market_value || 0;
     existing.cost_basis = (existing.cost_basis || 0) + (holding.cost_basis || 0);
     existing.unrealized_gain = (existing.unrealized_gain || 0) + (holding.unrealized_gain || 0);
-    existing.current_price = existing.quantity > 0 ? existing.market_value / existing.quantity : existing.current_price;
+    existing.current_price =
+      existing.quantity > 0 ? existing.market_value / existing.quantity : existing.current_price;
     existing.average_price =
-      existing.quantity > 0 && existing.cost_basis != null ? (existing.cost_basis || 0) / existing.quantity : undefined;
+      existing.quantity > 0 && existing.cost_basis != null
+        ? (existing.cost_basis || 0) / existing.quantity
+        : undefined;
     existing.unrealized_gain_pct =
       existing.cost_basis && existing.cost_basis !== 0
         ? ((existing.unrealized_gain || 0) / existing.cost_basis) * 100
@@ -73,7 +84,8 @@ function buildPortfolioData(
   const investedCapital = Math.max(totalCostBasis - marginUsed, 0);
   const totalValue = equityValue + cashValue;
   const totalUnrealizedGain = sumNumbers(holdings.map((h) => h.unrealized_gain || 0));
-  const totalUnrealizedGainPct = totalCostBasis > 0 ? (totalUnrealizedGain / totalCostBasis) * 100 : 0;
+  const totalUnrealizedGainPct =
+    totalCostBasis > 0 ? (totalUnrealizedGain / totalCostBasis) * 100 : 0;
 
   return {
     totalValue,
@@ -108,9 +120,7 @@ export async function GET() {
     );
 
     const accountHoldings = holdsByAccountExists
-      ? await db.all<Holding[]>(
-          `SELECT * FROM holdings_by_account ORDER BY market_value DESC`
-        )
+      ? await db.all<Holding[]>(`SELECT * FROM holdings_by_account ORDER BY market_value DESC`)
       : [];
 
     const accounts = await db.all<Account[]>(
@@ -132,13 +142,18 @@ export async function GET() {
     let contributionsDataAvailable = false;
 
     if (txTableExists) {
-      const txRows = await db.all<Array<{ account_id: string; type: string; subtype: string; amount: number; date: string }>>(
+      const txRows = await db.all<
+        Array<{ account_id: string; type: string; subtype: string; amount: number; date: string }>
+      >(
         `SELECT account_id, type, COALESCE(subtype, '') as subtype, amount, date FROM investment_transactions`
       );
 
       if (txRows.length > 0) {
         contributionsDataAvailable = true;
-        const byAccount = new Map<string, Array<{ type: string; subtype: string; amount: number }>>();
+        const byAccount = new Map<
+          string,
+          Array<{ type: string; subtype: string; amount: number }>
+        >();
 
         for (const tx of txRows) {
           if (!contributionMinDate || tx.date < contributionMinDate) contributionMinDate = tx.date;
@@ -195,12 +210,18 @@ export async function GET() {
 
     for (const tab of categoryTabs) {
       const categoryAccounts = accounts.filter((a) => (a.account_category || 'other') === tab.key);
-      const accountIds = new Set(categoryAccounts.map((a) => a.provider_account_id || a.account_id));
+      const accountIds = new Set(
+        categoryAccounts.map((a) => a.provider_account_id || a.account_id)
+      );
       const categoryRows = baseRows.filter((h) =>
         h.provider_account_id ? accountIds.has(h.provider_account_id) : false
       );
-      const categoryHoldings = aggregateHoldingsByTicker(categoryRows.filter((h) => h.asset_type !== 'option'));
-      const categoryOptions = aggregateHoldingsByTicker(categoryRows.filter((h) => h.asset_type === 'option'));
+      const categoryHoldings = aggregateHoldingsByTicker(
+        categoryRows.filter((h) => h.asset_type !== 'option')
+      );
+      const categoryOptions = aggregateHoldingsByTicker(
+        categoryRows.filter((h) => h.asset_type === 'option')
+      );
       const categoryContributions = sumNumbers(
         Array.from(accountIds).map((id) => contributionsByAccount.get(id) || 0)
       );
@@ -209,11 +230,18 @@ export async function GET() {
         key: tab.key,
         label: tab.label,
         accountIds: Array.from(accountIds),
-        portfolio: buildPortfolioData(categoryHoldings, categoryOptions, categoryAccounts, lastUpdated, categoryContributions, {
-          minDate: contributionMinDate,
-          maxDate: contributionMaxDate,
-          hasData: contributionsDataAvailable,
-        }),
+        portfolio: buildPortfolioData(
+          categoryHoldings,
+          categoryOptions,
+          categoryAccounts,
+          lastUpdated,
+          categoryContributions,
+          {
+            minDate: contributionMinDate,
+            maxDate: contributionMaxDate,
+            hasData: contributionsDataAvailable,
+          }
+        ),
       });
     }
 
@@ -228,4 +256,3 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch portfolio' }, { status: 500 });
   }
 }
-

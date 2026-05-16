@@ -1,5 +1,7 @@
 # CoinCraft
+
 A custom Financial tracking application
+
 # CoinCraft — Local-First Portfolio Tracker
 
 A **secure, local-first** portfolio management application for tracking your investments (starting with Robinhood). Store all data locally, access advanced metrics and visualizations, and manage notes for each holding.
@@ -14,7 +16,7 @@ A **secure, local-first** portfolio management application for tracking your inv
 ✅ **Performance Metrics** — Track unrealized gains and YOY returns  
 ✅ **Manual Refresh** — Pull latest data on demand  
 ✅ **Light/Dark Mode** — Minimalist, clean UI  
-✅ **Portable** — Clone and run with minimal setup  
+✅ **Portable** — Clone and run with minimal setup
 
 ## Tech Stack
 
@@ -97,14 +99,14 @@ The app will be available at `http://localhost:3000`.
 
 ## API Endpoints
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/providers/plaid/exchange` | POST | Exchange public token for access token |
-| `/api/providers/plaid/status` | GET | Check Plaid connection status |
-| `/api/providers/plaid/disconnect` | POST | Disconnect Robinhood account |
-| `/api/providers/plaid/portfolio` | GET | Fetch current portfolio data |
-| `/api/sync` | POST | Manually sync portfolio with Robinhood |
-| `/api/notes/[ticker]` | GET/PUT | Retrieve or save notes for a ticker |
+| Endpoint                          | Method  | Purpose                                |
+| --------------------------------- | ------- | -------------------------------------- |
+| `/api/providers/plaid/exchange`   | POST    | Exchange public token for access token |
+| `/api/providers/plaid/status`     | GET     | Check Plaid connection status          |
+| `/api/providers/plaid/disconnect` | POST    | Disconnect Robinhood account           |
+| `/api/providers/plaid/portfolio`  | GET     | Fetch current portfolio data           |
+| `/api/sync`                       | POST    | Manually sync portfolio with Robinhood |
+| `/api/notes/[ticker]`             | GET/PUT | Retrieve or save notes for a ticker    |
 
 ## Development
 
@@ -138,6 +140,7 @@ CoinCraft/
 ### Adding a New Provider
 
 1. Implement a provider class in `lib/providers.ts`:
+
    ```typescript
    export class NewProvider implements PortfolioProvider {
      name = 'NewProvider';
@@ -165,18 +168,23 @@ npm run lint
 ## Data Model
 
 ### Holdings Table
+
 Stores current equity positions with pricing and performance data.
 
 ### Portfolio Snapshots
+
 Daily snapshots of portfolio value for historical tracking and YOY calculations.
 
 ### Stock Notes
+
 User-created notes per ticker with tags and target prices.
 
 ### Sync History
+
 Logs of all data synchronization attempts with errors.
 
 ### Provider Tokens
+
 Secure storage of OAuth tokens and account IDs (local database only).
 
 ## Security Considerations
@@ -190,6 +198,7 @@ Secure storage of OAuth tokens and account IDs (local database only).
 ## Roadmap
 
 ### Phase 1 (Current)
+
 - [x] Core Next.js + SQLite foundation
 - [x] Plaid integration scaffold
 - [x] Dashboard with allocation chart
@@ -198,6 +207,7 @@ Secure storage of OAuth tokens and account IDs (local database only).
 - [x] Light/dark theme
 
 ### Phase 2 (Upcoming)
+
 - [ ] Real Plaid holdings API integration (test with sandbox)
 - [ ] YOY return calculations from historical snapshots
 - [ ] Sector/industry grouping
@@ -205,6 +215,7 @@ Secure storage of OAuth tokens and account IDs (local database only).
 - [ ] CSV export
 
 ### Phase 3 (Multi-user/Cloud)
+
 - [ ] User authentication
 - [ ] Multi-account support
 - [ ] Cloud deployment (AWS, Vercel, etc.)
@@ -212,7 +223,8 @@ Secure storage of OAuth tokens and account IDs (local database only).
 - [ ] Mobile companion app
 
 ### Phase 4 (Advanced)
-- [ ] Support for other brokers (Charles Schwab, E*TRADE, etc.)
+
+- [ ] Support for other brokers (Charles Schwab, E\*TRADE, etc.)
 - [ ] Options and crypto support
 - [ ] Tax-loss harvesting suggestions
 - [ ] Dividends tracking and forecasting
@@ -220,15 +232,19 @@ Secure storage of OAuth tokens and account IDs (local database only).
 ## Troubleshooting
 
 ### Database not found
+
 Run `npm run db:init` to create the database and tables.
 
 ### Portfolio data not syncing
+
 1. Check that `.env.local` has valid Plaid credentials
 2. Verify Plaid connection status in Settings
 3. Check browser console for API errors
 
 ### Styles not loading correctly
+
 Ensure Tailwind CSS is configured properly. If issues persist:
+
 ```bash
 npm install
 npm run dev

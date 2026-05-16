@@ -7,10 +7,7 @@ export async function POST() {
     const secret = process.env.PLAID_SECRET;
 
     if (!clientId || !secret) {
-      return NextResponse.json(
-        { error: 'Plaid credentials not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Plaid credentials not configured' }, { status: 500 });
     }
 
     const plaidBaseUrl = getPlaidBaseUrl();
@@ -35,10 +32,7 @@ export async function POST() {
     if (!response.ok) {
       const errorBody = await response.text();
       console.error('Plaid link token error:', errorBody);
-      return NextResponse.json(
-        { error: 'Failed to create Plaid link token' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to create Plaid link token' }, { status: 500 });
     }
 
     const data = await response.json();
@@ -52,4 +46,3 @@ export async function POST() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

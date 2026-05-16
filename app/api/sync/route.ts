@@ -11,7 +11,8 @@ function classifyAccount(account: any): string {
   const type = String(account.type || '').toLowerCase();
 
   if (subtype.includes('roth') || name.includes('roth')) return 'roth_ira';
-  if (subtype.includes('crypto') || type.includes('crypto') || name.includes('crypto')) return 'crypto';
+  if (subtype.includes('crypto') || type.includes('crypto') || name.includes('crypto'))
+    return 'crypto';
   if (name.includes('joint') || subtype.includes('joint')) return 'joint';
   if (type === 'investment') return 'individual';
   return 'other';
@@ -200,8 +201,7 @@ async function syncPlaidPortfolio(accessToken: string) {
       existing.quantity > 0 ? existing.market_value / existing.quantity : existing.current_price;
 
     // Weighted average cost = total cost_basis / total quantity
-    existing.average_price =
-      existing.quantity > 0 ? existing.cost_basis / existing.quantity : null;
+    existing.average_price = existing.quantity > 0 ? existing.cost_basis / existing.quantity : null;
 
     existing.unrealized_gain_pct =
       existing.cost_basis && existing.cost_basis !== 0
@@ -232,10 +232,7 @@ export async function POST() {
     );
 
     if (!tokenRecord) {
-      return NextResponse.json(
-        { error: 'Plaid not connected' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Plaid not connected' }, { status: 400 });
     }
 
     // Sync portfolio
@@ -319,15 +316,22 @@ export async function POST() {
     const cashAccounts = await db.all(
       `SELECT uninvested_cash FROM accounts WHERE provider = 'plaid'`
     );
-    const cashValue = cashAccounts.reduce((sum: number, acc: any) => sum + (acc.uninvested_cash || 0), 0);
+    const cashValue = cashAccounts.reduce(
+      (sum: number, acc: any) => sum + (acc.uninvested_cash || 0),
+      0
+    );
     const totalValue = equityValue + cashValue;
-    const totalCostBasis = holdings.reduce((sum: number, h: any) => sum + Math.max(h.cost_basis || 0, 0), 0);
+    const totalCostBasis = holdings.reduce(
+      (sum: number, h: any) => sum + Math.max(h.cost_basis || 0, 0),
+      0
+    );
 
     const totalUnrealizedGain = holdings.reduce(
       (sum: number, h: any) => sum + (h.unrealized_gain || 0),
       0
     );
-    const totalUnrealizedGainPct = totalCostBasis > 0 ? (totalUnrealizedGain / totalCostBasis) * 100 : 0;
+    const totalUnrealizedGainPct =
+      totalCostBasis > 0 ? (totalUnrealizedGain / totalCostBasis) * 100 : 0;
     const today = new Date().toISOString().split('T')[0];
 
     await db.run(
@@ -367,4 +371,3 @@ export async function POST() {
     );
   }
 }
-

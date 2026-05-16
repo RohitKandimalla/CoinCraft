@@ -11,7 +11,9 @@ export function AllocationChart({ portfolio }: AllocationChartProps) {
   if (!portfolio || portfolio.holdings.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Portfolio Allocation</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          Portfolio Allocation
+        </h3>
         <p className="mt-4 text-center text-gray-500 dark:text-gray-400">No holdings to display</p>
       </div>
     );
@@ -58,11 +60,14 @@ export function AllocationChart({ portfolio }: AllocationChartProps) {
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip formatter={(value) => `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`} />
+          <Tooltip
+            formatter={(value) =>
+              `$${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+            }
+          />
           <Legend />
         </PieChart>
       </ResponsiveContainer>
     </div>
   );
 }
-

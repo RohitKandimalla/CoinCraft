@@ -3,18 +3,16 @@ import { getDatabase } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { ticker: string } }
+  { params }: { params: Promise<{ ticker: string }> }
 ) {
   try {
+    const { ticker } = await params;
     const db = await getDatabase();
-    const note = await db.get(
-      'SELECT * FROM stock_notes WHERE ticker = ?',
-      [params.ticker]
-    );
+    const note = await db.get('SELECT * FROM stock_notes WHERE ticker = ?', [ticker]);
 
     if (!note) {
       return NextResponse.json({
-        ticker: params.ticker,
+        ticker,
         note: '',
         tags: [],
         target_buy_price: null,
@@ -34,9 +32,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { ticker: string } }
+  { params }: { params: Promise<{ ticker: string }> }
 ) {
   try {
+    const { ticker } = await params;
     const body = await request.json();
     const db = await getDatabase();
 
@@ -45,7 +44,7 @@ export async function PUT(
        (ticker, note, tags, target_buy_price, target_sell_price, updated_at)
        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [
-        params.ticker,
+        ticker,
         body.note || '',
         JSON.stringify(body.tags || []),
         body.target_buy_price || null,
@@ -59,4 +58,3 @@ export async function PUT(
     return NextResponse.json({ error: 'Failed to save notes' }, { status: 500 });
   }
 }
-

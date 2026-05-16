@@ -171,7 +171,8 @@ export default function SettingsPage() {
 
               {!plaidStatus?.credentialsConfigured && (
                 <p className="text-sm text-red-600 dark:text-red-400">
-                  Plaid credentials are missing. Add `PLAID_CLIENT_ID` and `PLAID_SECRET` in `.env.local`.
+                  Plaid credentials are missing. Add `PLAID_CLIENT_ID` and `PLAID_SECRET` in
+                  `.env.local`.
                 </p>
               )}
             </div>
@@ -184,7 +185,8 @@ export default function SettingsPage() {
               Plaid credentials: {plaidStatus?.credentialsConfigured ? 'Configured' : 'Missing'}
             </p>
             <p>
-              Plaid environment: <span className="font-medium">{plaidStatus?.environment || 'sandbox'}</span>
+              Plaid environment:{' '}
+              <span className="font-medium">{plaidStatus?.environment || 'sandbox'}</span>
             </p>
           </div>
 
@@ -203,16 +205,16 @@ export default function SettingsPage() {
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          Database Status
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Database Status</h2>
         <div className="mt-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Your data is stored locally on your machine in SQLite database at <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">data/coincraft.db</code>
+            Your data is stored locally on your machine in SQLite database at{' '}
+            <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+              data/coincraft.db
+            </code>
           </p>
         </div>
       </div>
     </div>
   );
 }
-

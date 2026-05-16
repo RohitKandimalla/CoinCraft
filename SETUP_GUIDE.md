@@ -9,6 +9,7 @@ Your CoinCraft local-first portfolio tracker is now set up and ready. Below is a
 ## 1. Getting Started
 
 ### Prerequisites
+
 - ✅ Node.js 16+ and npm installed
 - ✅ Git repository initialized
 - ✅ All dependencies installed
@@ -85,41 +86,44 @@ import { usePlaidLink } from 'react-plaid-link';
 
 Your SQLite database (`data/coincraft.db`) has the following tables:
 
-| Table | Purpose |
-|-------|---------|
-| `holdings` | Current equity positions |
-| `portfolio_snapshots` | Daily portfolio value snapshots |
-| `stock_notes` | User notes with tags and target prices |
-| `sync_history` | Log of all sync attempts |
-| `provider_tokens` | OAuth tokens from Plaid (local only) |
-| `accounts` | Bank/investment accounts from Plaid |
-| `yoy_returns` | Year-over-year performance calculations |
+| Table                 | Purpose                                 |
+| --------------------- | --------------------------------------- |
+| `holdings`            | Current equity positions                |
+| `portfolio_snapshots` | Daily portfolio value snapshots         |
+| `stock_notes`         | User notes with tags and target prices  |
+| `sync_history`        | Log of all sync attempts                |
+| `provider_tokens`     | OAuth tokens from Plaid (local only)    |
+| `accounts`            | Bank/investment accounts from Plaid     |
+| `yoy_returns`         | Year-over-year performance calculations |
 
 ### API Endpoints
 
 #### Portfolio Management
+
 - `GET /api/providers/plaid/portfolio` — Fetch current portfolio
 - `POST /api/sync` — Manually sync with Robinhood
 - `GET /api/providers/plaid/status` — Check connection status
 
 #### Plaid Integration
+
 - `POST /api/providers/plaid/exchange` — Exchange public token for access token
 - `POST /api/providers/plaid/disconnect` — Disconnect account
 
 #### Stock Notes
+
 - `GET /api/notes/[ticker]` — Get notes for a ticker
 - `PUT /api/notes/[ticker]` — Save/update notes
 
 ### Component Structure
 
-| Component | Purpose |
-|-----------|---------|
+| Component          | Purpose                                    |
+| ------------------ | ------------------------------------------ |
 | `PortfolioSummary` | Dashboard cards (value, gains, allocation) |
-| `AllocationChart` | Pie chart of equity weights |
-| `HoldingsTable` | Sortable table of all holdings |
-| `NotesModal` | Add/edit stock notes and tags |
-| `Navigation` | Top nav with theme toggle |
-| `ThemeProvider` | Light/dark mode support |
+| `AllocationChart`  | Pie chart of equity weights                |
+| `HoldingsTable`    | Sortable table of all holdings             |
+| `NotesModal`       | Add/edit stock notes and tags              |
+| `Navigation`       | Top nav with theme toggle                  |
+| `ThemeProvider`    | Light/dark mode support                    |
 
 ---
 
@@ -128,6 +132,7 @@ Your SQLite database (`data/coincraft.db`) has the following tables:
 ### Manual Testing Workflow
 
 #### 1. Start the Dev Server
+
 ```bash
 npm run dev
 ```
@@ -156,6 +161,7 @@ VALUES ('joint_001', 'Savings', 'joint', 15000.00, 'manual', datetime('now'), da
 ```
 
 #### 3. Visit the Dashboard
+
 - Go to **http://localhost:3000**
 - You should see:
   - Total portfolio value
@@ -164,6 +170,7 @@ VALUES ('joint_001', 'Savings', 'joint', 15000.00, 'manual', datetime('now'), da
   - Unrealized gains/losses
 
 #### 4. Test Stock Notes
+
 - Click the **Edit** icon on any holding
 - Add a note: "Strong growth potential"
 - Tag as **BUY**
@@ -171,6 +178,7 @@ VALUES ('joint_001', 'Savings', 'joint', 15000.00, 'manual', datetime('now'), da
 - Save
 
 #### 5. Test Manual Refresh
+
 - Click the **Refresh** button
 - The dashboard should re-fetch from `/api/providers/plaid/portfolio`
 
@@ -183,19 +191,19 @@ VALUES ('joint_001', 'Savings', 'joint', 15000.00, 'manual', datetime('now'), da
 Currently, the app is **scaffolded but not fully connected** to Plaid's Holdings API. To complete the integration:
 
 #### 1. **Set up Plaid Sandbox Account**
-   - Use the provided credentials for sandbox testing
-   - Demo data is available in Plaid dashboard
+
+- Use the provided credentials for sandbox testing
+- Demo data is available in Plaid dashboard
 
 #### 2. **Update `/api/providers/plaid/portfolio/route.ts`**
-   
+
 Currently it reads from your local database. To fetch real data:
 
 ```typescript
 // Get access token from DB
-const token = await db.get(
-  'SELECT access_token FROM provider_tokens WHERE provider = ?',
-  ['plaid']
-);
+const token = await db.get('SELECT access_token FROM provider_tokens WHERE provider = ?', [
+  'plaid',
+]);
 
 // Call Plaid Holdings API
 const holdingsResponse = await fetch('https://sandbox.plaid.com/investments/holdings/get', {
@@ -213,7 +221,7 @@ const holdingsResponse = await fetch('https://sandbox.plaid.com/investments/hold
 ```
 
 #### 3. **Implement Plaid Link Flow**
-   
+
 Update `/app/settings/page.tsx` to use `react-plaid-link`:
 
 ```typescript
@@ -256,7 +264,7 @@ const linkResponse = await fetch('https://sandbox.plaid.com/link/token/create', 
     language: 'en',
     products: ['investments'],
     country_codes: ['US'],
-    institution_id: 'ins_3',  // Robinhood
+    institution_id: 'ins_3', // Robinhood
   }),
 });
 
@@ -268,6 +276,7 @@ return linkResponse.json().link_token;
 ## 6. YOY Returns Implementation
 
 ### Current State
+
 - Table `yoy_returns` is created but not yet populated
 
 ### Implementation Plan
@@ -278,11 +287,11 @@ Add a new API route `/api/metrics/yoy-returns`:
 // Calculations based on historical snapshots
 export async function GET() {
   const db = await getDatabase();
-  
+
   // Group snapshots by year
   // Compare start and end values
   // Calculate returns
-  
+
   return NextResponse.json({
     2025: { return: 12.5 },
     2026: { return: 8.3 },
@@ -314,6 +323,7 @@ When ready to deploy to cloud (Vercel, AWS, etc.):
 ### Local → Cloud Path
 
 The app is already structured for multi-user deployment:
+
 - API routes are stateless
 - Database is abstracted
 - No hardcoded user assumptions
@@ -323,6 +333,7 @@ The app is already structured for multi-user deployment:
 ## 8. Troubleshooting
 
 ### Dev Server Won't Start
+
 ```bash
 # Kill any existing process
 lsof -ti:3000 | xargs kill -9
@@ -335,6 +346,7 @@ npm run dev
 ```
 
 ### Database Errors
+
 ```bash
 # Reinitialize database
 npm run db:init
@@ -344,6 +356,7 @@ sqlite3 data/coincraft.db ".tables"
 ```
 
 ### Styles Not Loading
+
 ```bash
 # Clear and rebuild
 rm -rf .next node_modules/.cache
@@ -351,6 +364,7 @@ npm run dev
 ```
 
 ### Plaid API Errors
+
 - Verify credentials in `.env.local`
 - Check Plaid dashboard for API rate limits
 - Ensure sandbox/production environment matches
@@ -360,10 +374,12 @@ npm run dev
 ## 9. Development Tips
 
 ### Hot Reload
+
 - The app auto-reloads on file changes (Next.js built-in)
 - Changes to API routes require page refresh
 
 ### Debugging
+
 - Open **http://localhost:3000** and check browser console
 - View server logs in the terminal running `npm run dev`
 - Query the database with: `sqlite3 data/coincraft.db`
@@ -380,6 +396,7 @@ npm run dev
 ## 10. Feature Roadmap
 
 ### Phase 1 MVP ✅
+
 - [x] Local SQLite storage
 - [x] Dashboard with summary cards
 - [x] Portfolio allocation chart
@@ -390,6 +407,7 @@ npm run dev
 - [ ] Real Plaid integration
 
 ### Phase 2 (Next)
+
 - [ ] Real Plaid Holdings API integration
 - [ ] YOY returns calculation and display
 - [ ] Performance charts over time
@@ -397,6 +415,7 @@ npm run dev
 - [ ] Dividend tracking
 
 ### Phase 3 (Multi-User)
+
 - [ ] User authentication
 - [ ] Multi-account support
 - [ ] Cloud deployment
@@ -407,6 +426,7 @@ npm run dev
 ## Questions & Support
 
 For issues or questions:
+
 1. Check the main README.md
 2. Review API endpoint documentation above
 3. Check browser console and server logs
@@ -415,4 +435,3 @@ For issues or questions:
 ---
 
 **Happy tracking! 🚀**
-

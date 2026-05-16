@@ -9,11 +9,8 @@ export function ClientLayout({ children }: { children: ReactNode }) {
     <ThemeProvider>
       <div className="min-h-screen bg-white dark:bg-gray-950">
         <Navigation />
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {children}
-        </main>
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       </div>
     </ThemeProvider>
   );
 }
-

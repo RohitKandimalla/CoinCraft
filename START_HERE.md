@@ -1,9 +1,9 @@
 ╔════════════════════════════════════════════════════════════════════════════╗
-║                                                                            ║
-║                        🚀 COINCRAFT MVP - READY! 🚀                        ║
-║                                                                            ║
-║                   Secure, Local-First Portfolio Tracker                    ║
-║                                                                            ║
+║ ║
+║ 🚀 COINCRAFT MVP - READY! 🚀 ║
+║ ║
+║ Secure, Local-First Portfolio Tracker ║
+║ ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 
 ## ✅ PROJECT COMPLETION SUMMARY
@@ -25,6 +25,7 @@ Your CoinCraft application has been successfully initialized and is ready to use
 ## 📦 WHAT WAS BUILT
 
 ### Core Stack
+
 - Next.js 14 (TypeScript, React 18)
 - SQLite (local file-based storage)
 - Tailwind CSS (light/dark theme)
@@ -32,6 +33,7 @@ Your CoinCraft application has been successfully initialized and is ready to use
 - Lucide React (icons)
 
 ### Key Components
+
 1. **Dashboard** — Portfolio summary, allocation chart, holdings table
 2. **Stock Notes** — Add tags (BUY/SELL/HOLD), target prices
 3. **Settings** — Plaid integration ready (scaffold)
@@ -39,6 +41,7 @@ Your CoinCraft application has been successfully initialized and is ready to use
 5. **API Layer** — 7 endpoints for sync, notes, Plaid integration
 
 ### Database
+
 - 7 tables: holdings, snapshots, notes, accounts, sync_history, tokens, yoy_returns
 - All data stored locally in `data/coincraft.db`
 - Zero cloud dependencies
@@ -48,13 +51,17 @@ Your CoinCraft application has been successfully initialized and is ready to use
 ## 🚀 HOW TO USE RIGHT NOW
 
 ### 1. Access the Dashboard
+
 ```
 Open: http://localhost:3000
 ```
+
 You'll see sample holdings (AAPL, MSFT, TSLA, GOOGL, AMZN) with a pie chart allocation.
 
 ### 2. Try Stock Notes
+
 Click the **Edit** (pencil) icon on any holding:
+
 - Add a note: "Strong buy opportunity"
 - Tag as: BUY, SELL, or HOLD (color-coded)
 - Set target buy price: $150
@@ -62,9 +69,11 @@ Click the **Edit** (pencil) icon on any holding:
 - Click Save
 
 ### 3. Toggle Theme
+
 Click the **Moon/Sun** icon in the top right to switch between light/dark mode.
 
 ### 4. Refresh Portfolio
+
 Click the **Refresh** button to manually sync portfolio data.
 
 ---
@@ -72,6 +81,7 @@ Click the **Refresh** button to manually sync portfolio data.
 ## 📁 PROJECT FILES
 
 ### Important Developer Files
+
 ```
 app/page.tsx                  — Dashboard (main UI)
 components/                   — UI components (6 files)
@@ -83,6 +93,7 @@ data/coincraft.db            — Local database
 ```
 
 ### Documentation (Read These!)
+
 ```
 QUICK_START.md              ← Start here!
 README.md                   ← Full overview
@@ -91,6 +102,7 @@ PROJECT_COMPLETION.md       ← Checklist & verification
 ```
 
 ### Configuration
+
 ```
 .env.local                  ← Your secrets (in .gitignore)
 package.json               ← Dependencies & scripts
@@ -126,30 +138,35 @@ npm run dev
 ## 💡 FEATURE HIGHLIGHTS
 
 ✅ **Dashboard Metrics**
+
 - Total portfolio value
-- Equity vs. cash allocation  
+- Equity vs. cash allocation
 - Unrealized gains/losses
 - Percentage weightage per holding
 
 ✅ **Stock Notes**
+
 - Add/edit text notes per ticker
 - Tag as BUY (green), SELL (red), HOLD (blue)
 - Set target buy and sell prices
 - Full persistence in SQLite
 
 ✅ **Visual Indicators**
+
 - Pie chart showing equity allocation
 - Color-coded gains (green) / losses (red)
 - Sortable holdings table
 - Responsive design
 
 ✅ **Security**
+
 - All data local (no cloud)
 - API secrets in `.env.local` (in `.gitignore`)
 - No credentials hardcoded
 - Ready for future multi-user deployment
 
 ✅ **Portfolio Tracking**
+
 - Manual refresh button
 - Auto-refresh on dashboard load
 - Historical snapshots for YOY returns (future)
@@ -160,18 +177,21 @@ npm run dev
 ## 🔗 NEXT STEPS
 
 ### Immediate (Optional Testing)
+
 1. Add more notes to sample holdings
 2. Toggle between light/dark modes
 3. Click Refresh button to test sync flow
 4. Explore API responses in browser DevTools
 
 ### Phase 2 (Real Data)
+
 1. Get Plaid credentials: https://dashboard.plaid.com/
 2. Add credentials to `.env.local`
 3. Follow `SETUP_GUIDE.md` for Plaid integration
 4. Connect your real Robinhood account
 
 ### Future (Enhanced Features)
+
 1. YOY return calculations
 2. Performance charts over time
 3. CSV export
@@ -192,35 +212,38 @@ npm run dev
 
 ## 📊 PROJECT STATS
 
-| Metric | Value |
-|--------|-------|
-| Components | 6 |
-| API Routes | 7 |
-| Database Tables | 7 |
-| Lines of Code | ~1,500+ |
-| Build Size | 185 kB |
-| Dev Dependencies | 16 |
-| TypeScript Coverage | 100% |
-| Configuration Files | 5 |
-| Documentation Pages | 4 |
+| Metric              | Value   |
+| ------------------- | ------- |
+| Components          | 6       |
+| API Routes          | 7       |
+| Database Tables     | 7       |
+| Lines of Code       | ~1,500+ |
+| Build Size          | 185 kB  |
+| Dev Dependencies    | 16      |
+| TypeScript Coverage | 100%    |
+| Configuration Files | 5       |
+| Documentation Pages | 4       |
 
 ---
 
 ## ❓ TROUBLESHOOTING
 
 ### App won't load?
+
 ```bash
 lsof -ti:3000 | xargs kill -9
 npm run dev
 ```
 
 ### Database issues?
+
 ```bash
 npm run db:init
 npm run db:seed
 ```
 
 ### Styles not loading?
+
 ```bash
 rm -rf .next
 npm run dev
@@ -233,6 +256,7 @@ npm run dev
 Your **CoinCraft MVP** is fully functional and ready for testing.
 
 **What You Have:**
+
 - ✅ Local portfolio tracker with SQLite
 - ✅ Beautiful React dashboard
 - ✅ Stock notes with tags and targets
@@ -247,16 +271,19 @@ Your **CoinCraft MVP** is fully functional and ready for testing.
 ## 📚 DOCUMENTATION ROADMAP
 
 **First Time?**
+
 1. Read `QUICK_START.md` (5 min)
 2. Open http://localhost:3000
 3. Play with the dashboard
 
 **Want Full Details?**
+
 1. Read `README.md` (architecture, tech stack, roadmap)
 2. Read `PROJECT_COMPLETION.md` (checklist)
 3. Read `SETUP_GUIDE.md` (Plaid integration)
 
 **Ready to Code?**
+
 1. Check `app/page.tsx` for dashboard
 2. Check `components/` for UI components
 3. Check `app/api/` for backend
@@ -267,6 +294,7 @@ Your **CoinCraft MVP** is fully functional and ready for testing.
 ## 📞 SUPPORT
 
 For issues:
+
 1. Check browser console for errors
 2. Check terminal logs from `npm run dev`
 3. Verify `.env.local` has Plaid credentials (for integration)
@@ -279,4 +307,3 @@ For issues:
 **Next Action: Visit http://localhost:3000 and explore! 🚀**
 
 ═══════════════════════════════════════════════════════════════════════════════
-

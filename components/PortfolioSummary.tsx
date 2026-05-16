@@ -24,10 +24,13 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
   }
 
   const gainIsPositive = (portfolio.totalUnrealizedGain || 0) >= 0;
-  const equityPct = portfolio.totalValue > 0 ? (portfolio.equityValue / portfolio.totalValue) * 100 : 0;
+  const equityPct =
+    portfolio.totalValue > 0 ? (portfolio.equityValue / portfolio.totalValue) * 100 : 0;
   const cashPct = portfolio.totalValue > 0 ? (portfolio.cashValue / portfolio.totalValue) * 100 : 0;
   const contributionRangeText =
-    portfolio.contributionsDataAvailable && portfolio.contributionsStartDate && portfolio.contributionsEndDate
+    portfolio.contributionsDataAvailable &&
+    portfolio.contributionsStartDate &&
+    portfolio.contributionsEndDate
       ? `${portfolio.contributionsStartDate} to ${portfolio.contributionsEndDate}`
       : 'Needs Performance calculation';
 
@@ -90,11 +93,12 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
         <p className="text-sm text-gray-600 dark:text-gray-400">Net Contributions (Plaid)</p>
         <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-cyan-600 dark:text-cyan-400 tabular-nums leading-tight">
-          ${Number(portfolio.netContributions || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+          $
+          {Number(portfolio.netContributions || 0).toLocaleString('en-US', {
+            maximumFractionDigits: 2,
+          })}
         </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {contributionRangeText}
-        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{contributionRangeText}</p>
         <p className="mt-1 text-xs text-gray-400">
           Uses Plaid cash/transfer records; may differ from Robinhood MAX baseline.
         </p>
@@ -104,8 +108,13 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
         <p className="text-sm text-gray-600 dark:text-gray-400">Unrealized Gain</p>
         <div className="mt-2 flex items-center space-x-2">
-          <p className={`text-xl md:text-2xl xl:text-3xl font-bold tabular-nums leading-tight ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            ${Math.abs(portfolio.totalUnrealizedGain || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+          <p
+            className={`text-xl md:text-2xl xl:text-3xl font-bold tabular-nums leading-tight ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+          >
+            $
+            {Math.abs(portfolio.totalUnrealizedGain || 0).toLocaleString('en-US', {
+              maximumFractionDigits: 2,
+            })}
           </p>
           {gainIsPositive ? (
             <TrendingUp size={24} className="text-green-600 dark:text-green-400" />
@@ -113,8 +122,11 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
             <TrendingDown size={24} className="text-red-600 dark:text-red-400" />
           )}
         </div>
-        <p className={`mt-1 text-xs ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-          {gainIsPositive ? '+' : '-'}{Math.abs(portfolio.totalUnrealizedGainPct || 0).toFixed(2)}%
+        <p
+          className={`mt-1 text-xs ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+        >
+          {gainIsPositive ? '+' : '-'}
+          {Math.abs(portfolio.totalUnrealizedGainPct || 0).toFixed(2)}%
         </p>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           Based on current non-option holdings cost basis
@@ -123,4 +135,3 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
     </div>
   );
 }
-

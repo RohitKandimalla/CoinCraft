@@ -71,4 +71,3 @@ export function createProvider(providerName: string): PortfolioProvider {
       throw new Error(`Unknown provider: ${providerName}`);
   }
 }
-

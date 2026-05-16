@@ -8,7 +8,7 @@ interface Transaction {
   date: string;
   type: string;
   subtype: string;
-  amount: number;        // Plaid: positive = outflow (buy), negative = inflow (sell proceeds)
+  amount: number; // Plaid: positive = outflow (buy), negative = inflow (sell proceeds)
   quantity: number;
   price: number;
   fees: number;
@@ -93,7 +93,13 @@ async function fetchAllTransactions(accessToken: string): Promise<Transaction[]>
 function computeYOY(
   transactions: Transaction[],
   snapshots: { snapshot_date: string; total_value: number }[]
-): { year: number; returnPct: number; startValue: number | null; endValue: number | null; note: string }[] {
+): {
+  year: number;
+  returnPct: number;
+  startValue: number | null;
+  endValue: number | null;
+  note: string;
+}[] {
   const snapshotMap = new Map<string, number>();
   for (const s of snapshots) {
     snapshotMap.set(s.snapshot_date, s.total_value);
@@ -121,9 +127,7 @@ function computeYOY(
 
     // Find start/end snapshot values
     const startDate = `${year}-01-01`;
-    const endDate = isCurrentYear
-      ? new Date().toISOString().split('T')[0]
-      : `${year}-12-31`;
+    const endDate = isCurrentYear ? new Date().toISOString().split('T')[0] : `${year}-12-31`;
 
     // Nearest snapshot at/before startDate and at/for endDate
     const startValue = findNearestSnapshot(snapshotMap, startDate, 'before');
@@ -146,7 +150,8 @@ function computeYOY(
     let weightedCashFlow = 0;
 
     for (const txn of txns) {
-      const isCashDeposit = txn.type === 'cash' && (txn.subtype === 'deposit' || txn.subtype === 'transfer');
+      const isCashDeposit =
+        txn.type === 'cash' && (txn.subtype === 'deposit' || txn.subtype === 'transfer');
       const isCashWithdrawal = txn.type === 'cash' && txn.subtype === 'withdrawal';
 
       if (!isCashDeposit && !isCashWithdrawal) continue;
@@ -164,11 +169,16 @@ function computeYOY(
     }
 
     const denominator = startValue + weightedCashFlow;
-    const returnPct = denominator > 0
-      ? ((endValue - startValue - netCashFlow) / denominator) * 100
-      : 0;
+    const returnPct =
+      denominator > 0 ? ((endValue - startValue - netCashFlow) / denominator) * 100 : 0;
 
-    results.push({ year, returnPct, startValue, endValue, note: isCurrentYear ? 'ytd' : 'full_year' });
+    results.push({
+      year,
+      returnPct,
+      startValue,
+      endValue,
+      note: isCurrentYear ? 'ytd' : 'full_year',
+    });
   }
 
   return results;
@@ -290,7 +300,18 @@ export async function GET() {
       await db.run(
         `INSERT INTO investment_transactions (account_id, ticker, security_id, date, type, subtype, amount, quantity, price, fees)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [txn.account_id, txn.ticker, txn.security_id, txn.date, txn.type, txn.subtype, txn.amount, txn.quantity, txn.price, txn.fees]
+        [
+          txn.account_id,
+          txn.ticker,
+          txn.security_id,
+          txn.date,
+          txn.type,
+          txn.subtype,
+          txn.amount,
+          txn.quantity,
+          txn.price,
+          txn.fees,
+        ]
       );
     }
 
@@ -303,7 +324,11 @@ export async function GET() {
     const augmentedSnapshotMap = new Map<string, number>();
 
     if (latestSnap) {
-      const reconstructed = reconstructHistoricalValues(transactions, latestSnap.total_value, latestSnap.snapshot_date);
+      const reconstructed = reconstructHistoricalValues(
+        transactions,
+        latestSnap.total_value,
+        latestSnap.snapshot_date
+      );
       for (const [date, value] of reconstructed) {
         augmentedSnapshotMap.set(date, value);
       }
@@ -314,7 +339,13 @@ export async function GET() {
       augmentedSnapshotMap.set(s.snapshot_date, s.total_value);
     }
 
-    const yoyResults = computeYOY(transactions, Array.from(augmentedSnapshotMap).map(([snapshot_date, total_value]) => ({ snapshot_date, total_value })));
+    const yoyResults = computeYOY(
+      transactions,
+      Array.from(augmentedSnapshotMap).map(([snapshot_date, total_value]) => ({
+        snapshot_date,
+        total_value,
+      }))
+    );
 
     // Persist calculated returns
     for (const result of yoyResults) {
@@ -338,4 +369,3 @@ export async function GET() {
     );
   }
 }
-

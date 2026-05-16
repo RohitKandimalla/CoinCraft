@@ -18,7 +18,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    const isDarkMode = localStorage.getItem('theme') === 'dark' ||
+    const isDarkMode =
+      localStorage.getItem('theme') === 'dark' ||
       (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
     setIsDark(isDarkMode);
     updateTheme(isDarkMode);
@@ -41,14 +42,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   if (!mounted) return <>{children}</>;
 
-  return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ isDark, toggleTheme }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
-

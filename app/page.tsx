@@ -112,9 +112,7 @@ export default function Dashboard() {
       {/* Header with Refresh */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-            Dashboard
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           {selectedView && (
             <p className="mt-1 text-sm font-medium text-primary-700 dark:text-primary-400">
               Viewing: {selectedView.label}
@@ -171,7 +169,9 @@ export default function Dashboard() {
           {/* Cash Box */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Uninvested Cash</h3>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Cash sitting in each account and not deployed into positions.</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Cash sitting in each account and not deployed into positions.
+            </p>
             <div className="mt-4 space-y-3">
               {selectedView?.portfolio.cash && selectedView.portfolio.cash.length > 0 ? (
                 selectedView.portfolio.cash
@@ -187,7 +187,11 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <span className="font-semibold text-green-600 dark:text-green-400">
-                        ${(account.uninvested_cash || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        $
+                        {(account.uninvested_cash || 0).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </span>
                     </div>
                   ))
@@ -200,9 +204,12 @@ export default function Dashboard() {
           {/* Margin Used */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Margin Used</h3>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Borrowed buying power. Shown for awareness, excluded from cash.</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Borrowed buying power. Shown for awareness, excluded from cash.
+            </p>
             <div className="mt-4 space-y-3">
-              {selectedView?.portfolio.cash && selectedView.portfolio.cash.some((account) => (account.margin_used || 0) > 0) ? (
+              {selectedView?.portfolio.cash &&
+              selectedView.portfolio.cash.some((account) => (account.margin_used || 0) > 0) ? (
                 selectedView.portfolio.cash
                   .filter((account) => (account.margin_used || 0) > 0)
                   .map((account) => (
@@ -216,7 +223,11 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <span className="font-semibold text-amber-600 dark:text-amber-400">
-                        ${(account.margin_used || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        $
+                        {(account.margin_used || 0).toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </span>
                     </div>
                   ))
@@ -231,9 +242,7 @@ export default function Dashboard() {
       {/* Performance */}
       {selectedViewKey === 'overall' && (
         <div>
-          <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
-            Performance
-          </h2>
+          <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">Performance</h2>
           <YOYReturnsChart />
         </div>
       )}
@@ -253,9 +262,7 @@ export default function Dashboard() {
       {/* Options positions */}
       {selectedView?.portfolio.options && selectedView.portfolio.options.length > 0 && (
         <div>
-          <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
-            Options
-          </h2>
+          <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">Options</h2>
           <OptionsTable portfolio={selectedView?.portfolio || null} />
         </div>
       )}
@@ -270,4 +277,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

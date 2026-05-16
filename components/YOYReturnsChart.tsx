@@ -2,7 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ReferenceLine,
+  ResponsiveContainer,
+  Cell,
 } from 'recharts';
 import { TrendingUp, TrendingDown, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -67,15 +75,16 @@ export function YOYReturnsChart() {
 
   const fmt = (n: number) =>
     n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-  const fmtPct = (n: number) =>
-    `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+  const fmtPct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Year-over-Year Returns</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Year-over-Year Returns
+          </h3>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Modified Dietz method accounting for deposits &amp; withdrawals.
             {data.length === 0 && ' Click Calculate to fetch your transaction history.'}
@@ -104,7 +113,9 @@ export function YOYReturnsChart() {
       {loading && (
         <div className="mt-8 flex flex-col items-center justify-center gap-2 py-8 text-gray-500 dark:text-gray-400">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
-          <p className="text-sm">Fetching {transactionCount > 0 ? transactionCount : 'all'} transactions…</p>
+          <p className="text-sm">
+            Fetching {transactionCount > 0 ? transactionCount : 'all'} transactions…
+          </p>
         </div>
       )}
 
@@ -124,9 +135,12 @@ export function YOYReturnsChart() {
                   }`}
                 >
                   <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    {row.year}{row.note === 'ytd' ? ' (YTD)' : ''}
+                    {row.year}
+                    {row.note === 'ytd' ? ' (YTD)' : ''}
                   </p>
-                  <div className={`mt-1 flex items-center gap-1 text-xl font-bold ${pos ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                  <div
+                    className={`mt-1 flex items-center gap-1 text-xl font-bold ${pos ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}
+                  >
                     {pos ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
                     {fmtPct(row.returnPct)}
                   </div>
@@ -195,4 +209,3 @@ export function YOYReturnsChart() {
     </div>
   );
 }
-

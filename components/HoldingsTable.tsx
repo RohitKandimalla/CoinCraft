@@ -33,46 +33,60 @@ export function HoldingsTable({ portfolio, onEditNote }: HoldingsTableProps) {
         <table className="w-full">
           <thead className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => {
-                    setSortKey('ticker');
-                    setSortDesc(sortKey === 'ticker' ? !sortDesc : false);
-                  }}>
+              <th
+                className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setSortKey('ticker');
+                  setSortDesc(sortKey === 'ticker' ? !sortDesc : false);
+                }}
+              >
                 Ticker
               </th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => {
-                    setSortKey('quantity');
-                    setSortDesc(sortKey === 'quantity' ? !sortDesc : true);
-                  }}>
+              <th
+                className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setSortKey('quantity');
+                  setSortDesc(sortKey === 'quantity' ? !sortDesc : true);
+                }}
+              >
                 Shares
               </th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => {
-                    setSortKey('current_price');
-                    setSortDesc(sortKey === 'current_price' ? !sortDesc : true);
-                  }}>
+              <th
+                className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setSortKey('current_price');
+                  setSortDesc(sortKey === 'current_price' ? !sortDesc : true);
+                }}
+              >
                 Price
               </th>
               <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
                 Avg Cost
               </th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => {
-                    setSortKey('market_value');
-                    setSortDesc(sortKey === 'market_value' ? !sortDesc : true);
-                  }}>
+              <th
+                className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setSortKey('market_value');
+                  setSortDesc(sortKey === 'market_value' ? !sortDesc : true);
+                }}
+              >
                 Value
               </th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => {
-                    setSortKey('unrealized_gain_pct');
-                    setSortDesc(sortKey === 'unrealized_gain_pct' ? !sortDesc : true);
-                  }}>
+              <th
+                className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => {
+                  setSortKey('unrealized_gain_pct');
+                  setSortDesc(sortKey === 'unrealized_gain_pct' ? !sortDesc : true);
+                }}
+              >
                 Gain %
               </th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">% of Portfolio</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 dark:text-white">Notes</th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                % of Portfolio
+              </th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 dark:text-white">
+                Notes
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
@@ -92,7 +106,11 @@ export function HoldingsTable({ portfolio, onEditNote }: HoldingsTableProps) {
                     {holding.quantity.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
-                    ${holding.current_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    $
+                    {holding.current_price.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </td>
                   <td className="px-6 py-4 text-right text-sm text-gray-500 dark:text-gray-400">
                     {holding.average_price != null
@@ -102,13 +120,14 @@ export function HoldingsTable({ portfolio, onEditNote }: HoldingsTableProps) {
                   <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white">
                     ${holding.market_value.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   </td>
-                  <td className={`px-6 py-4 text-right text-sm font-medium flex items-center justify-end space-x-1 ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {gainIsPositive ? (
-                      <TrendingUp size={16} />
-                    ) : (
-                      <TrendingDown size={16} />
-                    )}
-                    <span>{gainIsPositive ? '+' : '-'}{Math.abs(holding.unrealized_gain_pct || 0).toFixed(2)}%</span>
+                  <td
+                    className={`px-6 py-4 text-right text-sm font-medium flex items-center justify-end space-x-1 ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                  >
+                    {gainIsPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                    <span>
+                      {gainIsPositive ? '+' : '-'}
+                      {Math.abs(holding.unrealized_gain_pct || 0).toFixed(2)}%
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
                     {portfolioPercent}%
@@ -131,4 +150,3 @@ export function HoldingsTable({ portfolio, onEditNote }: HoldingsTableProps) {
     </div>
   );
 }
-

@@ -135,4 +135,3 @@ export interface PlaidLinkResponse {
     }>;
   };
 }
-

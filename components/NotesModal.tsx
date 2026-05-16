@@ -47,9 +47,7 @@ export function NotesModal({ ticker, isOpen, onClose, onSave }: NotesModalProps)
   };
 
   const toggleTag = (tag: 'BUY' | 'SELL' | 'HOLD') => {
-    setTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
+    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
 
   const handleSave = async () => {
@@ -76,9 +74,7 @@ export function NotesModal({ ticker, isOpen, onClose, onSave }: NotesModalProps)
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
       <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-900">
         <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-800">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            Notes for {ticker}
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Notes for {ticker}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -174,4 +170,3 @@ export function NotesModal({ ticker, isOpen, onClose, onSave }: NotesModalProps)
     </div>
   );
 }
-

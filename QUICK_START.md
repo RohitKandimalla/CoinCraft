@@ -10,7 +10,7 @@ Welcome to **CoinCraft** — your local-first portfolio tracker!
 ✅ **Minimalist light/dark theme**  
 ✅ **Stock notes with BUY/SELL/HOLD tags**  
 ✅ **Manual refresh button**  
-✅ **100% local — no cloud required**  
+✅ **100% local — no cloud required**
 
 ---
 
@@ -40,6 +40,7 @@ This adds 5 sample stocks (AAPL, MSFT, TSLA, GOOGL, AMZN) with realistic gains/l
 Visit **http://localhost:3000** in your browser.
 
 You should see:
+
 - **Dashboard** with total portfolio value (~$20k)
 - **Allocation chart** showing equity weights
 - **Holdings table** with sample stocks
@@ -49,6 +50,7 @@ You should see:
 ### 4. Add stock notes
 
 Click the **Edit icon** (pencil) on any holding:
+
 - Add a note: e.g., "Strong tech moat, DCA on dips"
 - Tag it: BUY / SELL / HOLD
 - Set target prices
@@ -65,15 +67,17 @@ Click the **Moon icon** in the top navigation.
 ## Key Features Summary
 
 ### Dashboard View
-| Component | What It Shows |
-|-----------|---------------|
-| **Portfolio Cards** | Total value, equity value, cash, unrealized gains |
-| **Allocation Chart** | Pie chart of equity weights |
-| **Holdings Table** | All stocks with price, quantity, gain %, portfolio % |
-| **Cash Box** | Your savings/joint accounts |
-| **Refresh Button** | Manual sync with portfolio source |
+
+| Component            | What It Shows                                        |
+| -------------------- | ---------------------------------------------------- |
+| **Portfolio Cards**  | Total value, equity value, cash, unrealized gains    |
+| **Allocation Chart** | Pie chart of equity weights                          |
+| **Holdings Table**   | All stocks with price, quantity, gain %, portfolio % |
+| **Cash Box**         | Your savings/joint accounts                          |
+| **Refresh Button**   | Manual sync with portfolio source                    |
 
 ### Stock Notes
+
 - Add **freeform text notes**
 - **Color-coded tags**: BUY (green), SELL (red), HOLD (blue)
 - **Target buy price** for entries
@@ -81,6 +85,7 @@ Click the **Moon icon** in the top navigation.
 - All stored locally in SQLite
 
 ### Theme
+
 - **Light mode** — clean, minimalist
 - **Dark mode** — easy on the eyes
 - Toggle anytime via the Moon/Sun icon
@@ -153,16 +158,19 @@ npm run lint              # Check code quality
 ## Important Security Notes
 
 ✅ **Secrets are protected**
+
 - `.env.local` is in `.gitignore`
 - All API keys stay local
 - No credentials pushed to Git
 
 ✅ **Data is local**
+
 - SQLite database lives on your machine
 - No cloud sync by default
 - Easy to backup/restore
 
 ✅ **For production** (future)
+
 - Add user authentication
 - Move database to secure server
 - Implement audit logging
@@ -172,6 +180,7 @@ npm run lint              # Check code quality
 ## Troubleshooting
 
 ### App won't load?
+
 ```bash
 # Kill any zombie processes
 lsof -ti:3000 | xargs kill -9
@@ -181,6 +190,7 @@ npm run dev
 ```
 
 ### Database error?
+
 ```bash
 # Reinitialize database
 npm run db:init
@@ -188,6 +198,7 @@ npm run db:seed
 ```
 
 ### Styles broken?
+
 ```bash
 # Clear cache and restart
 rm -rf .next
@@ -227,4 +238,3 @@ npm run dev
 Your secure, local-first portfolio tracker is ready. Happy investing!
 
 **All your data. Always local. Complete control.**
-

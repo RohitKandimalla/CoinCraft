@@ -22,4 +22,3 @@ export function getPlaidBaseUrl(): string {
 export function plaidCredentialsConfigured(): boolean {
   return Boolean(process.env.PLAID_CLIENT_ID && process.env.PLAID_SECRET);
 }
-

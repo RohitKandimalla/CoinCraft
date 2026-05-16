@@ -16,10 +16,7 @@ export async function POST(request: NextRequest) {
     const secret = process.env.PLAID_SECRET;
 
     if (!clientId || !secret) {
-      return NextResponse.json(
-        { error: 'Plaid credentials not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Plaid credentials not configured' }, { status: 500 });
     }
 
     const plaidBaseUrl = getPlaidBaseUrl();
@@ -37,10 +34,7 @@ export async function POST(request: NextRequest) {
     if (!plaidResponse.ok) {
       const error = await plaidResponse.text();
       console.error('Plaid exchange error:', error);
-      return NextResponse.json(
-        { error: 'Failed to exchange public token' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to exchange public token' }, { status: 500 });
     }
 
     const plaidData = await plaidResponse.json();
@@ -98,4 +92,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

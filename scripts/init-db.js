@@ -21,7 +21,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
 // Create tables
 db.serialize(() => {
   // Holdings table - stores current holdings
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS holdings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ticker TEXT UNIQUE NOT NULL,
@@ -38,13 +39,16 @@ db.serialize(() => {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) console.error('Error creating holdings table:', err);
-    else console.log('✓ Holdings table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating holdings table:', err);
+      else console.log('✓ Holdings table ready');
+    }
+  );
 
   // Portfolio snapshots - for historical tracking
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS portfolio_snapshots (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       total_value REAL NOT NULL,
@@ -55,13 +59,16 @@ db.serialize(() => {
       snapshot_date DATE UNIQUE NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) console.error('Error creating portfolio_snapshots table:', err);
-    else console.log('✓ Portfolio snapshots table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating portfolio_snapshots table:', err);
+      else console.log('✓ Portfolio snapshots table ready');
+    }
+  );
 
   // Stock notes
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS stock_notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ticker TEXT UNIQUE NOT NULL,
@@ -73,13 +80,16 @@ db.serialize(() => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(ticker) REFERENCES holdings(ticker)
     )
-  `, (err) => {
-    if (err) console.error('Error creating stock_notes table:', err);
-    else console.log('✓ Stock notes table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating stock_notes table:', err);
+      else console.log('✓ Stock notes table ready');
+    }
+  );
 
   // Sync history - for tracking Plaid syncs
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS sync_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       provider TEXT NOT NULL,
@@ -89,13 +99,16 @@ db.serialize(() => {
       error_message TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) console.error('Error creating sync_history table:', err);
-    else console.log('✓ Sync history table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating sync_history table:', err);
+      else console.log('✓ Sync history table ready');
+    }
+  );
 
   // Provider tokens - store Plaid access tokens securely
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS provider_tokens (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       provider TEXT UNIQUE NOT NULL,
@@ -106,13 +119,16 @@ db.serialize(() => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) console.error('Error creating provider_tokens table:', err);
-    else console.log('✓ Provider tokens table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating provider_tokens table:', err);
+      else console.log('✓ Provider tokens table ready');
+    }
+  );
 
   // Account metadata (Joint account, savings, etc)
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       account_id TEXT UNIQUE NOT NULL,
@@ -127,13 +143,16 @@ db.serialize(() => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) console.error('Error creating accounts table:', err);
-    else console.log('✓ Accounts table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating accounts table:', err);
+      else console.log('✓ Accounts table ready');
+    }
+  );
 
   // Holdings split by account - enables per-account tabs
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS holdings_by_account (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       provider_account_id TEXT NOT NULL,
@@ -152,13 +171,16 @@ db.serialize(() => {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) console.error('Error creating holdings_by_account table:', err);
-    else console.log('✓ Holdings-by-account table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating holdings_by_account table:', err);
+      else console.log('✓ Holdings-by-account table ready');
+    }
+  );
 
   // Investment transactions (for YOY calculations)
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS investment_transactions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plaid_transaction_id TEXT,
@@ -174,13 +196,16 @@ db.serialize(() => {
       fees REAL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
-  `, (err) => {
-    if (err) console.error('Error creating investment_transactions table:', err);
-    else console.log('✓ Investment transactions table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating investment_transactions table:', err);
+      else console.log('✓ Investment transactions table ready');
+    }
+  );
 
   // YOY returns cache
-  db.run(`
+  db.run(
+    `
     CREATE TABLE IF NOT EXISTS yoy_returns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       year INTEGER NOT NULL,
@@ -190,13 +215,14 @@ db.serialize(() => {
       calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(year)
     )
-  `, (err) => {
-    if (err) console.error('Error creating yoy_returns table:', err);
-    else console.log('✓ YOY returns table ready');
-  });
+  `,
+    (err) => {
+      if (err) console.error('Error creating yoy_returns table:', err);
+      else console.log('✓ YOY returns table ready');
+    }
+  );
 
   console.log('✓ Database initialization complete');
 });
 
 db.close();
-

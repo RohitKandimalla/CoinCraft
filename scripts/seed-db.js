@@ -9,30 +9,30 @@ const sampleHoldings = [
     ticker: 'AAPL',
     name: 'Apple Inc.',
     quantity: 10,
-    current_price: 180.50,
-    market_value: 1805.00,
-    cost_basis: 1500.00,
-    unrealized_gain: 305.00,
+    current_price: 180.5,
+    market_value: 1805.0,
+    cost_basis: 1500.0,
+    unrealized_gain: 305.0,
     unrealized_gain_pct: 20.33,
   },
   {
     ticker: 'MSFT',
     name: 'Microsoft Corporation',
     quantity: 5,
-    current_price: 420.00,
-    market_value: 2100.00,
-    cost_basis: 1800.00,
-    unrealized_gain: 300.00,
+    current_price: 420.0,
+    market_value: 2100.0,
+    cost_basis: 1800.0,
+    unrealized_gain: 300.0,
     unrealized_gain_pct: 16.67,
   },
   {
     ticker: 'TSLA',
     name: 'Tesla Inc.',
     quantity: 2,
-    current_price: 250.00,
-    market_value: 500.00,
-    cost_basis: 600.00,
-    unrealized_gain: -100.00,
+    current_price: 250.0,
+    market_value: 500.0,
+    cost_basis: 600.0,
+    unrealized_gain: -100.0,
     unrealized_gain_pct: -16.67,
   },
   {
@@ -41,7 +41,7 @@ const sampleHoldings = [
     quantity: 3,
     current_price: 140.25,
     market_value: 420.75,
-    cost_basis: 350.00,
+    cost_basis: 350.0,
     unrealized_gain: 70.75,
     unrealized_gain_pct: 20.21,
   },
@@ -49,11 +49,11 @@ const sampleHoldings = [
     ticker: 'AMZN',
     name: 'Amazon.com Inc.',
     quantity: 1,
-    current_price: 185.00,
-    market_value: 185.00,
-    cost_basis: 200.00,
-    unrealized_gain: -15.00,
-    unrealized_gain_pct: -7.50,
+    current_price: 185.0,
+    market_value: 185.0,
+    cost_basis: 200.0,
+    unrealized_gain: -15.0,
+    unrealized_gain_pct: -7.5,
   },
 ];
 
@@ -62,7 +62,7 @@ const sampleAccounts = [
     account_id: 'joint_001',
     account_name: 'Savings Account',
     account_type: 'joint',
-    balance: 15000.00,
+    balance: 15000.0,
     provider: 'manual',
   },
 ];
@@ -105,7 +105,7 @@ db.serialize(() => {
     `INSERT OR IGNORE INTO portfolio_snapshots 
      (total_value, equity_value, cash_value, snapshot_date, created_at)
      VALUES (?, ?, ?, date('now'), datetime('now'))`,
-    [totalValue, equityValue, 15000.00]
+    [totalValue, equityValue, 15000.0]
   );
 
   // Insert accounts
@@ -127,7 +127,11 @@ db.serialize(() => {
   // Insert sample notes for each holding
   sampleHoldings.forEach((holding, idx) => {
     const tags =
-      idx % 3 === 0 ? JSON.stringify(['BUY']) : idx % 3 === 1 ? JSON.stringify(['HOLD']) : JSON.stringify(['SELL']);
+      idx % 3 === 0
+        ? JSON.stringify(['BUY'])
+        : idx % 3 === 1
+          ? JSON.stringify(['HOLD'])
+          : JSON.stringify(['SELL']);
     db.run(
       `INSERT OR IGNORE INTO stock_notes 
        (ticker, note, tags, target_buy_price, target_sell_price, created_at, updated_at)
@@ -151,4 +155,3 @@ db.serialize(() => {
 });
 
 db.close();
-
