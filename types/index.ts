@@ -92,9 +92,13 @@ export interface PortfolioData {
   totalCostBasis: number;
   marginUsed: number;
   netContributions?: number;
+  contributionOverride?: number | null;
+  accountGain?: number;
+  accountGainPct?: number;
   contributionsStartDate?: string | null;
   contributionsEndDate?: string | null;
   contributionsDataAvailable?: boolean;
+  contributionsMethod?: 'manual_override' | 'manual_required';
   totalUnrealizedGain?: number;
   totalUnrealizedGainPct?: number;
   holdings: Holding[];

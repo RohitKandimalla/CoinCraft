@@ -10,6 +10,20 @@ import { OptionsTable } from '@/components/OptionsTable';
 import { YOYReturnsChart } from '@/components/YOYReturnsChart';
 import { RefreshCw } from 'lucide-react';
 
+function getContributionBadge(method?: string) {
+  if (method === 'manual_override') {
+    return {
+      label: 'Manual Set',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    };
+  }
+
+  return {
+    label: 'Manual Required',
+    className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  };
+}
+
 export default function Dashboard() {
   const [portfolioResponse, setPortfolioResponse] = useState<PortfolioResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,6 +32,9 @@ export default function Dashboard() {
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [selectedViewKey, setSelectedViewKey] = useState<string>('overall');
+  const [manualBaselineInput, setManualBaselineInput] = useState('');
+  const [savingBaseline, setSavingBaseline] = useState(false);
+  const [baselineMessage, setBaselineMessage] = useState<string | null>(null);
 
   // Fetch portfolio on mount
   useEffect(() => {
@@ -107,6 +124,85 @@ export default function Dashboard() {
     }
   }, [accountViews, selectedViewKey]);
 
+  useEffect(() => {
+    if (!selectedView?.portfolio) return;
+
+    const current =
+      selectedView.portfolio.contributionOverride ?? selectedView.portfolio.netContributions ?? 0;
+    setManualBaselineInput(current.toFixed(2));
+    setBaselineMessage(null);
+  }, [
+    selectedView?.key,
+    selectedView?.portfolio?.contributionOverride,
+    selectedView?.portfolio?.netContributions,
+  ]);
+
+  const handleSaveBaselineOverride = async () => {
+    if (!selectedView) return;
+
+    const value = Number(manualBaselineInput.replace(/,/g, '').trim());
+    if (!Number.isFinite(value) || value < 0) {
+      setBaselineMessage('Enter a valid non-negative number.');
+      return;
+    }
+
+    try {
+      setSavingBaseline(true);
+      setBaselineMessage(null);
+
+      const response = await fetch(
+        `/api/overrides/${encodeURIComponent(String(selectedView.key))}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ value }),
+        }
+      );
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to save baseline');
+      }
+
+      await fetchPortfolio();
+      setBaselineMessage('Baseline saved and metrics updated.');
+    } catch (error) {
+      console.error('Error saving contribution override:', error);
+      setBaselineMessage('Failed to save baseline override.');
+    } finally {
+      setSavingBaseline(false);
+    }
+  };
+
+  const handleResetBaselineOverride = async () => {
+    if (!selectedView) return;
+
+    try {
+      setSavingBaseline(true);
+      setBaselineMessage(null);
+
+      const response = await fetch(
+        `/api/overrides/${encodeURIComponent(String(selectedView.key))}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to reset baseline');
+      }
+
+      await fetchPortfolio();
+      setBaselineMessage('Baseline reset to automatic calculation.');
+    } catch (error) {
+      console.error('Error resetting contribution override:', error);
+      setBaselineMessage('Failed to reset baseline override.');
+    } finally {
+      setSavingBaseline(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header with Refresh */}
@@ -114,9 +210,18 @@ export default function Dashboard() {
         <div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           {selectedView && (
-            <p className="mt-1 text-sm font-medium text-primary-700 dark:text-primary-400">
-              Viewing: {selectedView.label}
-            </p>
+            <div className="mt-1 flex items-center gap-2">
+              <p className="text-sm font-medium text-primary-700 dark:text-primary-400">
+                Viewing: {selectedView.label}
+              </p>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  getContributionBadge(selectedView.portfolio.contributionsMethod).className
+                }`}
+              >
+                {getContributionBadge(selectedView.portfolio.contributionsMethod).label}
+              </span>
+            </div>
           )}
           {lastSync && (
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
@@ -149,7 +254,18 @@ export default function Dashboard() {
                     : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                 }`}
               >
-                {view.label}
+                <span className="inline-flex items-center gap-2">
+                  {view.label}
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      active
+                        ? 'bg-white/20 text-white'
+                        : getContributionBadge(view.portfolio.contributionsMethod).className
+                    }`}
+                  >
+                    {getContributionBadge(view.portfolio.contributionsMethod).label}
+                  </span>
+                </span>
               </button>
             );
           })}
@@ -158,6 +274,56 @@ export default function Dashboard() {
 
       {/* Portfolio Summary Cards */}
       <PortfolioSummary portfolio={selectedView?.portfolio || null} loading={loading} />
+
+      {/* Manual baseline override */}
+      {selectedView && (
+        <div className="rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+            Manual Baseline Override
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Paste your Robinhood "initial amount" for{' '}
+            <span className="font-medium">{selectedView.label}</span>. CoinCraft will use it as net
+            contributions and recalculate gain %.
+          </p>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex w-full items-center rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700">
+              <span className="mr-2 text-gray-500 dark:text-gray-400">$</span>
+              <input
+                type="text"
+                value={manualBaselineInput}
+                onChange={(e) => setManualBaselineInput(e.target.value)}
+                className="w-full bg-transparent text-sm text-gray-900 outline-none dark:text-white"
+                placeholder="e.g. 72444"
+              />
+            </div>
+
+            <button
+              onClick={handleSaveBaselineOverride}
+              disabled={savingBaseline}
+              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
+            >
+              {savingBaseline ? 'Saving...' : 'Save Baseline'}
+            </button>
+
+            <button
+              onClick={handleResetBaselineOverride}
+              disabled={savingBaseline}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              Reset to Auto
+            </button>
+          </div>
+
+          {baselineMessage && (
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">{baselineMessage}</p>
+          )}
+          <p className="mt-1 text-xs text-gray-400">
+            Current contribution method: {selectedView.portfolio.contributionsMethod || 'unknown'}
+          </p>
+        </div>
+      )}
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

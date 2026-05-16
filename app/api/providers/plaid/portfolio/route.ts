@@ -8,38 +8,6 @@ function sumNumbers(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0);
 }
 
-function calcNetContributions(
-  amounts: Array<{ type: string; subtype: string; amount: number }>
-): number {
-  let net = 0;
-
-  for (const tx of amounts) {
-    const type = (tx.type || '').toLowerCase();
-    const subtype = (tx.subtype || '').toLowerCase();
-    const amount = Number(tx.amount || 0);
-
-    // Deposits/transfers/contributions increase lifetime contributed capital.
-    if (
-      (type === 'cash' || type === 'transfer') &&
-      ['deposit', 'transfer', 'contribution'].includes(subtype)
-    ) {
-      net += Math.abs(amount);
-      continue;
-    }
-
-    // Withdrawals/distributions decrease lifetime contributed capital.
-    if (
-      (type === 'cash' || type === 'transfer') &&
-      ['withdrawal', 'distribution'].includes(subtype)
-    ) {
-      net -= Math.abs(amount);
-      continue;
-    }
-  }
-
-  return net;
-}
-
 function aggregateHoldingsByTicker(holdings: Holding[]): Holding[] {
   const grouped = new Map<string, Holding>();
 
@@ -73,9 +41,7 @@ function buildPortfolioData(
   holdings: Holding[],
   options: Holding[],
   accounts: Account[],
-  lastUpdated: string,
-  netContributions: number,
-  contributionsRange: { minDate: string | null; maxDate: string | null; hasData: boolean }
+  lastUpdated: string
 ): PortfolioData {
   const equityValue = sumNumbers(holdings.map((h) => h.market_value || 0));
   const cashValue = sumNumbers(accounts.map((a) => a.uninvested_cash || 0));
@@ -83,6 +49,8 @@ function buildPortfolioData(
   const marginUsed = sumNumbers(accounts.map((a) => a.margin_used || 0));
   const investedCapital = Math.max(totalCostBasis - marginUsed, 0);
   const totalValue = equityValue + cashValue;
+
+  // Keep standard holdings unrealized gain independent from manual contribution baseline.
   const totalUnrealizedGain = sumNumbers(holdings.map((h) => h.unrealized_gain || 0));
   const totalUnrealizedGainPct =
     totalCostBasis > 0 ? (totalUnrealizedGain / totalCostBasis) * 100 : 0;
@@ -94,10 +62,14 @@ function buildPortfolioData(
     investedCapital,
     totalCostBasis,
     marginUsed,
-    netContributions,
-    contributionsStartDate: contributionsRange.minDate,
-    contributionsEndDate: contributionsRange.maxDate,
-    contributionsDataAvailable: contributionsRange.hasData,
+    netContributions: undefined,
+    contributionOverride: null,
+    accountGain: undefined,
+    accountGainPct: undefined,
+    contributionsStartDate: null,
+    contributionsEndDate: null,
+    contributionsDataAvailable: false,
+    contributionsMethod: 'manual_required',
     totalUnrealizedGain,
     totalUnrealizedGainPct,
     holdings,
@@ -107,9 +79,45 @@ function buildPortfolioData(
   };
 }
 
+function applyContributionOverride(
+  portfolio: PortfolioData,
+  overrideValue: number | null
+): PortfolioData {
+  if (overrideValue == null || !Number.isFinite(overrideValue) || overrideValue < 0) {
+    return {
+      ...portfolio,
+      contributionOverride: null,
+      netContributions: undefined,
+      accountGain: undefined,
+      accountGainPct: undefined,
+      contributionsMethod: 'manual_required',
+    };
+  }
+
+  const gain = portfolio.totalValue - overrideValue;
+  const gainPct = overrideValue > 0 ? (gain / overrideValue) * 100 : 0;
+
+  return {
+    ...portfolio,
+    contributionOverride: overrideValue,
+    netContributions: overrideValue,
+    accountGain: gain,
+    accountGainPct: gainPct,
+    contributionsMethod: 'manual_override',
+  };
+}
+
 export async function GET() {
   try {
     const db = await getDatabase();
+
+    await db.run(`
+      CREATE TABLE IF NOT EXISTS contribution_overrides (
+        view_key TEXT PRIMARY KEY,
+        value REAL NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
     const holdsByAccountExists = await db.get(
       `SELECT name FROM sqlite_master WHERE type='table' AND name='holdings_by_account'`
@@ -123,7 +131,7 @@ export async function GET() {
       ? await db.all<Holding[]>(`SELECT * FROM holdings_by_account ORDER BY market_value DESC`)
       : [];
 
-    const accounts = await db.all<Account[]>(
+    const allAccounts = await db.all<Account[]>(
       `SELECT * FROM accounts WHERE provider = 'plaid' ORDER BY account_name ASC`
     );
 
@@ -132,64 +140,35 @@ export async function GET() {
     );
     const lastUpdated = latestSnapshot?.snapshot_date || new Date().toISOString();
 
-    const txTableExists = await db.get(
-      `SELECT name FROM sqlite_master WHERE type='table' AND name='investment_transactions'`
-    );
-
-    const contributionsByAccount = new Map<string, number>();
-    let contributionMinDate: string | null = null;
-    let contributionMaxDate: string | null = null;
-    let contributionsDataAvailable = false;
-
-    if (txTableExists) {
-      const txRows = await db.all<
-        Array<{ account_id: string; type: string; subtype: string; amount: number; date: string }>
-      >(
-        `SELECT account_id, type, COALESCE(subtype, '') as subtype, amount, date FROM investment_transactions`
-      );
-
-      if (txRows.length > 0) {
-        contributionsDataAvailable = true;
-        const byAccount = new Map<
-          string,
-          Array<{ type: string; subtype: string; amount: number }>
-        >();
-
-        for (const tx of txRows) {
-          if (!contributionMinDate || tx.date < contributionMinDate) contributionMinDate = tx.date;
-          if (!contributionMaxDate || tx.date > contributionMaxDate) contributionMaxDate = tx.date;
-
-          const list = byAccount.get(tx.account_id) || [];
-          list.push({ type: tx.type, subtype: tx.subtype, amount: tx.amount });
-          byAccount.set(tx.account_id, list);
-        }
-
-        for (const [accountId, txList] of byAccount) {
-          contributionsByAccount.set(accountId, calcNetContributions(txList));
-        }
-      }
-    }
-
-    const allAccountIds = accounts.map((a) => a.provider_account_id || a.account_id);
-    const overallContributions = sumNumbers(
-      allAccountIds.map((id) => contributionsByAccount.get(id) || 0)
-    );
-
     const baseRows = accountHoldings.length > 0 ? accountHoldings : aggregatedHoldings;
+    const accountsWithPositions = new Set(
+      baseRows.map((h) => h.provider_account_id).filter((id): id is string => Boolean(id))
+    );
+
+    const accounts = allAccounts.filter((account) => {
+      const id = account.provider_account_id || account.account_id;
+      const hasPosition = accountsWithPositions.has(id);
+      const hasCash = (account.uninvested_cash || 0) > 0;
+      const hasMargin = (account.margin_used || 0) > 0;
+      return hasPosition || hasCash || hasMargin;
+    });
+
+    const overrideRows = await db.all<Array<{ view_key: string; value: number }>>(
+      'SELECT view_key, value FROM contribution_overrides'
+    );
+    const overrideByView = new Map(overrideRows.map((row) => [row.view_key, row.value]));
+
     const overallIncludedRows = baseRows.filter((h) => h.asset_type !== 'option');
     const overallOptionRows = baseRows.filter((h) => h.asset_type === 'option');
 
-    const overallPortfolio = buildPortfolioData(
-      aggregateHoldingsByTicker(overallIncludedRows),
-      aggregateHoldingsByTicker(overallOptionRows),
-      accounts,
-      lastUpdated,
-      overallContributions,
-      {
-        minDate: contributionMinDate,
-        maxDate: contributionMaxDate,
-        hasData: contributionsDataAvailable,
-      }
+    const overallPortfolio = applyContributionOverride(
+      buildPortfolioData(
+        aggregateHoldingsByTicker(overallIncludedRows),
+        aggregateHoldingsByTicker(overallOptionRows),
+        accounts,
+        lastUpdated
+      ),
+      overrideByView.get('overall') ?? null
     );
 
     const accountViews: AccountPortfolioView[] = [
@@ -222,25 +201,14 @@ export async function GET() {
       const categoryOptions = aggregateHoldingsByTicker(
         categoryRows.filter((h) => h.asset_type === 'option')
       );
-      const categoryContributions = sumNumbers(
-        Array.from(accountIds).map((id) => contributionsByAccount.get(id) || 0)
-      );
 
       accountViews.push({
         key: tab.key,
         label: tab.label,
         accountIds: Array.from(accountIds),
-        portfolio: buildPortfolioData(
-          categoryHoldings,
-          categoryOptions,
-          categoryAccounts,
-          lastUpdated,
-          categoryContributions,
-          {
-            minDate: contributionMinDate,
-            maxDate: contributionMaxDate,
-            hasData: contributionsDataAvailable,
-          }
+        portfolio: applyContributionOverride(
+          buildPortfolioData(categoryHoldings, categoryOptions, categoryAccounts, lastUpdated),
+          overrideByView.get(tab.key) ?? null
         ),
       });
     }

@@ -222,6 +222,21 @@ db.serialize(() => {
     }
   );
 
+  // Manual contribution overrides per dashboard tab/view
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS contribution_overrides (
+      view_key TEXT PRIMARY KEY,
+      value REAL NOT NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+    (err) => {
+      if (err) console.error('Error creating contribution_overrides table:', err);
+      else console.log('✓ Contribution overrides table ready');
+    }
+  );
+
   console.log('✓ Database initialization complete');
 });
 

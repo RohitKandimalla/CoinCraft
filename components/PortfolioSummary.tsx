@@ -32,7 +32,9 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
     portfolio.contributionsStartDate &&
     portfolio.contributionsEndDate
       ? `${portfolio.contributionsStartDate} to ${portfolio.contributionsEndDate}`
-      : 'Needs Performance calculation';
+      : 'Set manually per account';
+
+  const hasManualContribution = portfolio.netContributions != null;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
@@ -69,12 +71,12 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
 
       {/* Net Capital in Current Holdings */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Net Capital in Current Holdings</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Current Holdings Cost Basis</p>
         <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-violet-600 dark:text-violet-400 tabular-nums leading-tight">
           ${portfolio.investedCapital.toLocaleString('en-US', { maximumFractionDigits: 2 })}
         </p>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Current non-option cost basis minus margin used
+          Non-option positions cost basis minus margin used
         </p>
       </div>
 
@@ -89,24 +91,27 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
         </p>
       </div>
 
-      {/* Lifetime Net Contributions (Plaid-derived) */}
+      {/* Net Contributions (Manual) */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Net Contributions (Plaid)</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Net Contributions (Manual)</p>
         <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-cyan-600 dark:text-cyan-400 tabular-nums leading-tight">
-          $
-          {Number(portfolio.netContributions || 0).toLocaleString('en-US', {
-            maximumFractionDigits: 2,
-          })}
+          {hasManualContribution
+            ? `$${Number(portfolio.netContributions).toLocaleString('en-US', {
+                maximumFractionDigits: 2,
+              })}`
+            : '—'}
         </p>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{contributionRangeText}</p>
         <p className="mt-1 text-xs text-gray-400">
-          Uses Plaid cash/transfer records; may differ from Robinhood MAX baseline.
+          Enter this value manually from Robinhood for accurate account baseline.
         </p>
       </div>
 
-      {/* Unrealized Gain */}
+      {/* Gain */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Unrealized Gain</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {hasManualContribution ? 'Account Gain vs Contributions' : 'Unrealized Gain (Holdings)'}
+        </p>
         <div className="mt-2 flex items-center space-x-2">
           <p
             className={`text-xl md:text-2xl xl:text-3xl font-bold tabular-nums leading-tight ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
@@ -129,7 +134,9 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
           {Math.abs(portfolio.totalUnrealizedGainPct || 0).toFixed(2)}%
         </p>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Based on current non-option holdings cost basis
+          {hasManualContribution
+            ? 'Current portfolio value minus manual net contributions'
+            : 'Based on current holdings cost basis'}
         </p>
       </div>
     </div>
