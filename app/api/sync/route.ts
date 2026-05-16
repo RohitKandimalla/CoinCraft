@@ -238,6 +238,29 @@ export async function POST() {
     const db = await getDatabase();
     await ensureSchema(db);
 
+    const existingLots = await db.all<
+      Array<{ provider_account_id: string; ticker: string; created_at: string }>
+    >('SELECT provider_account_id, ticker, created_at FROM holdings_by_account');
+    const lotFirstSeen = new Map<string, string>();
+    for (const row of existingLots) {
+      const key = `${row.provider_account_id}::${row.ticker}`;
+      const current = lotFirstSeen.get(key);
+      if (!current || row.created_at < current) {
+        lotFirstSeen.set(key, row.created_at);
+      }
+    }
+
+    const existingAggregated = await db.all<Array<{ ticker: string; created_at: string }>>(
+      'SELECT ticker, created_at FROM holdings'
+    );
+    const tickerFirstSeen = new Map<string, string>();
+    for (const row of existingAggregated) {
+      const current = tickerFirstSeen.get(row.ticker);
+      if (!current || row.created_at < current) {
+        tickerFirstSeen.set(row.ticker, row.created_at);
+      }
+    }
+
     // Get access token from database
     const tokenRecord = await db.get(
       'SELECT access_token FROM provider_tokens WHERE provider = ?',
@@ -253,12 +276,15 @@ export async function POST() {
     const holdings = syncResult.holdings;
 
     await db.run(`DELETE FROM holdings_by_account`);
+    const nowIso = new Date().toISOString();
 
     for (const holding of syncResult.rawHoldings) {
+      const lotKey = `${holding.provider_account_id}::${holding.ticker}`;
+      const createdAt = lotFirstSeen.get(lotKey) || nowIso;
       await db.run(
         `INSERT INTO holdings_by_account 
-         (provider_account_id, account_name, account_category, asset_type, ticker, name, quantity, current_price, average_price, market_value, cost_basis, unrealized_gain, unrealized_gain_pct)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (provider_account_id, account_name, account_category, asset_type, ticker, name, quantity, current_price, average_price, market_value, cost_basis, unrealized_gain, unrealized_gain_pct, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           holding.provider_account_id,
           holding.account_name,
@@ -273,6 +299,7 @@ export async function POST() {
           holding.cost_basis,
           holding.unrealized_gain,
           holding.unrealized_gain_pct,
+          createdAt,
         ]
       );
     }
@@ -304,10 +331,11 @@ export async function POST() {
     await db.run('DELETE FROM holdings');
 
     for (const holding of holdings) {
+      const createdAt = tickerFirstSeen.get(holding.ticker) || nowIso;
       await db.run(
         `INSERT INTO holdings 
-         (ticker, name, provider_account_id, asset_type, quantity, current_price, average_price, market_value, cost_basis, unrealized_gain, unrealized_gain_pct)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (ticker, name, provider_account_id, asset_type, quantity, current_price, average_price, market_value, cost_basis, unrealized_gain, unrealized_gain_pct, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           holding.ticker,
           holding.name,
@@ -320,6 +348,7 @@ export async function POST() {
           holding.cost_basis,
           holding.unrealized_gain,
           holding.unrealized_gain_pct,
+          createdAt,
         ]
       );
     }

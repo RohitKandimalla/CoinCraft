@@ -439,7 +439,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {!isOverallView && (
+      {selectedView && !isOverallView && (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <SectorAssetBreakdownChart portfolio={selectedView?.portfolio || null} />
           <TopGainersLosersChart portfolio={selectedView?.portfolio || null} />

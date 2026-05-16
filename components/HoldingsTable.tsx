@@ -4,6 +4,22 @@ import { PortfolioData, Holding } from '@/types';
 import { useState } from 'react';
 import { TrendingUp, TrendingDown, Edit2 } from 'lucide-react';
 
+function formatHoldingDuration(createdAt?: string) {
+  if (!createdAt) return '—';
+  const normalized = createdAt.includes(' ') ? createdAt.replace(' ', 'T') : createdAt;
+  const start = new Date(normalized);
+  if (Number.isNaN(start.getTime())) return '—';
+
+  const diffDays = Math.max(0, Math.floor((Date.now() - start.getTime()) / (1000 * 60 * 60 * 24)));
+  const years = Math.floor(diffDays / 365);
+  const months = Math.floor((diffDays % 365) / 30);
+  const days = diffDays % 30;
+
+  if (years > 0) return `${years}y ${months}m`;
+  if (months > 0) return `${months}m ${days}d`;
+  return `${days}d`;
+}
+
 interface HoldingsTableProps {
   portfolio: PortfolioData | null;
   onEditNote: (ticker: string) => void;
@@ -60,6 +76,9 @@ export function HoldingsTable({ portfolio, onEditNote, highlightedTicker }: Hold
                 }}
               >
                 Price
+              </th>
+              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                Held
               </th>
               <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
                 Avg Cost
@@ -120,6 +139,12 @@ export function HoldingsTable({ portfolio, onEditNote, highlightedTicker }: Hold
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
+                  </td>
+                  <td
+                    className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400"
+                    title={holding.created_at ? `Since ${new Date(holding.created_at).toLocaleDateString()}` : undefined}
+                  >
+                    {formatHoldingDuration(holding.created_at)}
                   </td>
                   <td className="px-6 py-4 text-right text-sm text-gray-500 dark:text-gray-400">
                     {holding.average_price != null

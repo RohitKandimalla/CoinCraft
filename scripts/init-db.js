@@ -214,6 +214,7 @@ db.serialize(() => {
     }
   );
 
+
   console.log('✓ Database initialization complete');
 });
 

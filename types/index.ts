@@ -40,6 +40,7 @@ export interface StockNote {
   created_at: string;
 }
 
+
 export interface SyncHistory {
   id: number;
   provider: string;
