@@ -47,7 +47,6 @@ function buildPortfolioData(
   const cashValue = sumNumbers(accounts.map((a) => a.uninvested_cash || 0));
   const totalCostBasis = sumNumbers(holdings.map((h) => Math.max(h.cost_basis || 0, 0)));
   const marginUsed = sumNumbers(accounts.map((a) => a.margin_used || 0));
-  const investedCapital = Math.max(totalCostBasis - marginUsed, 0);
   const totalValue = equityValue + cashValue;
 
   // Keep standard holdings unrealized gain independent from manual contribution baseline.
@@ -59,8 +58,6 @@ function buildPortfolioData(
     totalValue,
     equityValue,
     cashValue,
-    investedCapital,
-    totalCostBasis,
     marginUsed,
     netContributions: undefined,
     contributionOverride: null,
@@ -94,7 +91,8 @@ function applyContributionOverride(
     };
   }
 
-  const gain = portfolio.totalValue - overrideValue;
+  // Compare manual net contributions against invested holdings value (not cash-inclusive total).
+  const gain = portfolio.equityValue - overrideValue;
   const gainPct = overrideValue > 0 ? (gain / overrideValue) * 100 : 0;
 
   return {
@@ -158,27 +156,7 @@ export async function GET() {
     );
     const overrideByView = new Map(overrideRows.map((row) => [row.view_key, row.value]));
 
-    const overallIncludedRows = baseRows.filter((h) => h.asset_type !== 'option');
-    const overallOptionRows = baseRows.filter((h) => h.asset_type === 'option');
-
-    const overallPortfolio = applyContributionOverride(
-      buildPortfolioData(
-        aggregateHoldingsByTicker(overallIncludedRows),
-        aggregateHoldingsByTicker(overallOptionRows),
-        accounts,
-        lastUpdated
-      ),
-      overrideByView.get('overall') ?? null
-    );
-
-    const accountViews: AccountPortfolioView[] = [
-      {
-        key: 'overall',
-        label: 'Overall',
-        accountIds: accounts.map((a) => a.provider_account_id || a.account_id),
-        portfolio: overallPortfolio,
-      },
-    ];
+    const accountViews: AccountPortfolioView[] = [];
 
     const categoryTabs = [
       { key: 'individual', label: 'Individual Account' },
@@ -202,7 +180,7 @@ export async function GET() {
         categoryRows.filter((h) => h.asset_type === 'option')
       );
 
-      accountViews.push({
+      const categoryView: AccountPortfolioView = {
         key: tab.key,
         label: tab.label,
         accountIds: Array.from(accountIds),
@@ -210,8 +188,47 @@ export async function GET() {
           buildPortfolioData(categoryHoldings, categoryOptions, categoryAccounts, lastUpdated),
           overrideByView.get(tab.key) ?? null
         ),
-      });
+      };
+
+      accountViews.push(categoryView);
     }
+
+    const overallIncludedRows = baseRows.filter((h) => h.asset_type !== 'option');
+    const overallOptionRows = baseRows.filter((h) => h.asset_type === 'option');
+    const overallBase = buildPortfolioData(
+      aggregateHoldingsByTicker(overallIncludedRows),
+      aggregateHoldingsByTicker(overallOptionRows),
+      accounts,
+      lastUpdated
+    );
+
+    const activeCategoryViews = accountViews.filter((view) => view.portfolio.totalValue > 0);
+    const allActiveHaveManual =
+      activeCategoryViews.length > 0 &&
+      activeCategoryViews.every((view) => view.portfolio.netContributions != null);
+
+    const overallPortfolio = allActiveHaveManual
+      ? applyContributionOverride(
+          overallBase,
+          sumNumbers(
+            activeCategoryViews.map((view) => Number(view.portfolio.netContributions || 0))
+          )
+        )
+      : {
+          ...overallBase,
+          contributionsMethod: 'manual_required' as const,
+          netContributions: undefined,
+          contributionOverride: null,
+          accountGain: undefined,
+          accountGainPct: undefined,
+        };
+
+    accountViews.unshift({
+      key: 'overall',
+      label: 'Overall',
+      accountIds: accounts.map((a) => a.provider_account_id || a.account_id),
+      portfolio: overallPortfolio,
+    });
 
     const response: PortfolioResponse = {
       overall: overallPortfolio,

@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { AccountPortfolioView, PortfolioResponse, StockNote } from '@/types';
 import { PortfolioSummary } from '@/components/PortfolioSummary';
 import { AllocationChart } from '@/components/AllocationChart';
 import { HoldingsTable } from '@/components/HoldingsTable';
 import { NotesModal } from '@/components/NotesModal';
 import { OptionsTable } from '@/components/OptionsTable';
-import { YOYReturnsChart } from '@/components/YOYReturnsChart';
 import { RefreshCw } from 'lucide-react';
 
 function getContributionBadge(method?: string) {
@@ -35,6 +34,7 @@ export default function Dashboard() {
   const [manualBaselineInput, setManualBaselineInput] = useState('');
   const [savingBaseline, setSavingBaseline] = useState(false);
   const [baselineMessage, setBaselineMessage] = useState<string | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   // Fetch portfolio on mount
   useEffect(() => {
@@ -88,6 +88,17 @@ export default function Dashboard() {
     }
   };
 
+  const handleChartClick = (ticker: string) => {
+    setSelectedTicker(ticker);
+    // Scroll to the row after a brief delay to allow rendering
+    setTimeout(() => {
+      const element = document.getElementById(`holding-${ticker}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 0);
+  };
+
   const accountViews = useMemo<AccountPortfolioView[]>(() => {
     if (!portfolioResponse) return [];
     const hasOverall = portfolioResponse.accountViews.some((view) => view.key === 'overall');
@@ -116,6 +127,8 @@ export default function Dashboard() {
     );
   }, [portfolioResponse, accountViews, selectedViewKey]);
 
+  const isOverallView = selectedView?.key === 'overall';
+
   useEffect(() => {
     if (accountViews.length === 0) return;
     const exists = accountViews.some((view) => view.key === selectedViewKey);
@@ -139,6 +152,10 @@ export default function Dashboard() {
 
   const handleSaveBaselineOverride = async () => {
     if (!selectedView) return;
+    if (selectedView.key === 'overall') {
+      setBaselineMessage('Overall baseline is calculated from account baselines.');
+      return;
+    }
 
     const value = Number(manualBaselineInput.replace(/,/g, '').trim());
     if (!Number.isFinite(value) || value < 0) {
@@ -176,6 +193,10 @@ export default function Dashboard() {
 
   const handleResetBaselineOverride = async () => {
     if (!selectedView) return;
+    if (selectedView.key === 'overall') {
+      setBaselineMessage('Reset account-level baselines to change overall baseline.');
+      return;
+    }
 
     try {
       setSavingBaseline(true);
@@ -282,9 +303,19 @@ export default function Dashboard() {
             Manual Baseline Override
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Paste your Robinhood "initial amount" for{' '}
-            <span className="font-medium">{selectedView.label}</span>. CoinCraft will use it as net
-            contributions and recalculate gain %.
+            {isOverallView ? (
+              <>
+                Overall baseline is automatically calculated as the sum of account-level baselines.
+                Update <span className="font-medium">Individual / Roth IRA / Joint / Crypto</span>{' '}
+                baselines to change Overall.
+              </>
+            ) : (
+              <>
+                Paste your Robinhood "initial amount" for{' '}
+                <span className="font-medium">{selectedView.label}</span>. CoinCraft will use it as
+                net contributions and recalculate gain %.
+              </>
+            )}
           </p>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -296,12 +327,13 @@ export default function Dashboard() {
                 onChange={(e) => setManualBaselineInput(e.target.value)}
                 className="w-full bg-transparent text-sm text-gray-900 outline-none dark:text-white"
                 placeholder="e.g. 72444"
+                disabled={isOverallView}
               />
             </div>
 
             <button
               onClick={handleSaveBaselineOverride}
-              disabled={savingBaseline}
+              disabled={savingBaseline || isOverallView}
               className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
             >
               {savingBaseline ? 'Saving...' : 'Save Baseline'}
@@ -309,7 +341,7 @@ export default function Dashboard() {
 
             <button
               onClick={handleResetBaselineOverride}
-              disabled={savingBaseline}
+              disabled={savingBaseline || isOverallView}
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Reset to Auto
@@ -325,11 +357,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <AllocationChart portfolio={selectedView?.portfolio || null} />
-        </div>
+       {/* Charts Grid */}
+       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+         <div className="lg:col-span-2">
+           <AllocationChart portfolio={selectedView?.portfolio || null} onTickerClick={handleChartClick} />
+         </div>
 
         <div className="space-y-4">
           {/* Cash Box */}
@@ -405,25 +437,18 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Performance */}
-      {selectedViewKey === 'overall' && (
-        <div>
-          <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">Performance</h2>
-          <YOYReturnsChart />
-        </div>
-      )}
-
-      {/* Holdings Table */}
-      <div>
-        <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">Holdings</h2>
-        <HoldingsTable
-          portfolio={selectedView?.portfolio || null}
-          onEditNote={(ticker) => {
-            setSelectedTicker(ticker);
-            setNotesModalOpen(true);
-          }}
-        />
-      </div>
+        {/* Holdings Table */}
+       <div ref={tableRef}>
+         <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">Holdings</h2>
+         <HoldingsTable
+           portfolio={selectedView?.portfolio || null}
+           onEditNote={(ticker) => {
+             setSelectedTicker(ticker);
+             setNotesModalOpen(true);
+           }}
+           highlightedTicker={selectedTicker}
+         />
+       </div>
 
       {/* Options positions */}
       {selectedView?.portfolio.options && selectedView.portfolio.options.length > 0 && (

@@ -94,7 +94,6 @@ Your SQLite database (`data/coincraft.db`) has the following tables:
 | `sync_history`        | Log of all sync attempts                |
 | `provider_tokens`     | OAuth tokens from Plaid (local only)    |
 | `accounts`            | Bank/investment accounts from Plaid     |
-| `yoy_returns`         | Year-over-year performance calculations |
 
 ### API Endpoints
 
@@ -273,33 +272,6 @@ return linkResponse.json().link_token;
 
 ---
 
-## 6. YOY Returns Implementation
-
-### Current State
-
-- Table `yoy_returns` is created but not yet populated
-
-### Implementation Plan
-
-Add a new API route `/api/metrics/yoy-returns`:
-
-```typescript
-// Calculations based on historical snapshots
-export async function GET() {
-  const db = await getDatabase();
-
-  // Group snapshots by year
-  // Compare start and end values
-  // Calculate returns
-
-  return NextResponse.json({
-    2025: { return: 12.5 },
-    2026: { return: 8.3 },
-  });
-}
-```
-
----
 
 ## 7. Deployment & Production Setup
 
@@ -409,7 +381,6 @@ npm run dev
 ### Phase 2 (Next)
 
 - [ ] Real Plaid Holdings API integration
-- [ ] YOY returns calculation and display
 - [ ] Performance charts over time
 - [ ] CSV export
 - [ ] Dividend tracking

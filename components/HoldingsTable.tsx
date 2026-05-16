@@ -7,9 +7,10 @@ import { TrendingUp, TrendingDown, Edit2 } from 'lucide-react';
 interface HoldingsTableProps {
   portfolio: PortfolioData | null;
   onEditNote: (ticker: string) => void;
+  highlightedTicker?: string | null;
 }
 
-export function HoldingsTable({ portfolio, onEditNote }: HoldingsTableProps) {
+export function HoldingsTable({ portfolio, onEditNote, highlightedTicker }: HoldingsTableProps) {
   const [sortKey, setSortKey] = useState<keyof Holding>('market_value');
   const [sortDesc, setSortDesc] = useState(true);
 
@@ -72,18 +73,18 @@ export function HoldingsTable({ portfolio, onEditNote }: HoldingsTableProps) {
               >
                 Value
               </th>
-              <th
-                className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => {
-                  setSortKey('unrealized_gain_pct');
-                  setSortDesc(sortKey === 'unrealized_gain_pct' ? !sortDesc : true);
-                }}
-              >
-                Gain %
-              </th>
-              <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
-                % of Portfolio
-              </th>
+               <th
+                 className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                 onClick={() => {
+                   setSortKey('unrealized_gain_pct');
+                   setSortDesc(sortKey === 'unrealized_gain_pct' ? !sortDesc : true);
+                 }}
+               >
+                 Gain
+               </th>
+               <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                 % of Portfolio
+               </th>
               <th className="px-6 py-3 text-center text-sm font-semibold text-gray-900 dark:text-white">
                 Notes
               </th>
@@ -97,8 +98,16 @@ export function HoldingsTable({ portfolio, onEditNote }: HoldingsTableProps) {
                   ? ((holding.market_value / portfolio.totalValue) * 100).toFixed(2)
                   : '0.00';
 
-              return (
-                <tr key={holding.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+               return (
+                 <tr
+                   key={holding.id}
+                   id={`holding-${holding.ticker}`}
+                   className={`transition-colors ${
+                     highlightedTicker === holding.ticker
+                       ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500'
+                       : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                   }`}
+                 >
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                     {holding.ticker}
                   </td>
@@ -120,15 +129,15 @@ export function HoldingsTable({ portfolio, onEditNote }: HoldingsTableProps) {
                   <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white">
                     ${holding.market_value.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                   </td>
-                  <td
-                    className={`px-6 py-4 text-right text-sm font-medium flex items-center justify-end space-x-1 ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                  >
-                    {gainIsPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                    <span>
-                      {gainIsPositive ? '+' : '-'}
-                      {Math.abs(holding.unrealized_gain_pct || 0).toFixed(2)}%
-                    </span>
-                  </td>
+                   <td
+                     className={`px-6 py-4 text-right text-sm font-medium flex items-center justify-end space-x-1 ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                   >
+                     {gainIsPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                     <span>
+                       ${holding.unrealized_gain?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) ?? '0.00'} ({gainIsPositive ? '+' : '-'}
+                       {Math.abs(holding.unrealized_gain_pct || 0).toFixed(2)}%)
+                     </span>
+                   </td>
                   <td className="px-6 py-4 text-right text-sm text-gray-600 dark:text-gray-400">
                     {portfolioPercent}%
                   </td>

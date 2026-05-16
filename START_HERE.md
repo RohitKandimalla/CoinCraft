@@ -15,7 +15,7 @@ Your CoinCraft application has been successfully initialized and is ready to use
 ## 🎯 CURRENT STATUS
 
 ✅ **Development Server Running** — http://localhost:3000
-✅ **Database Initialized** — SQLite with 7 tables
+✅ **Database Initialized** — SQLite with 6 tables
 ✅ **Test Data Loaded** — 5 sample stocks + $15k cash
 ✅ **All Features Working** — Dashboard, notes, theme toggle
 ✅ **Build Verified** — Production build passes all checks
@@ -42,7 +42,7 @@ Your CoinCraft application has been successfully initialized and is ready to use
 
 ### Database
 
-- 7 tables: holdings, snapshots, notes, accounts, sync_history, tokens, yoy_returns
+- 6 tables: holdings, snapshots, notes, accounts, sync_history, tokens
 - All data stored locally in `data/coincraft.db`
 - Zero cloud dependencies
 
@@ -169,7 +169,6 @@ npm run dev
 
 - Manual refresh button
 - Auto-refresh on dashboard load
-- Historical snapshots for YOY returns (future)
 - Sync status logging
 
 ---
@@ -192,11 +191,10 @@ npm run dev
 
 ### Future (Enhanced Features)
 
-1. YOY return calculations
-2. Performance charts over time
-3. CSV export
-4. Multi-broker support
-5. Cloud deployment for friends/peers
+1. Performance charts over time
+2. CSV export
+3. Multi-broker support
+4. Cloud deployment for friends/peers
 
 ---
 
@@ -214,10 +212,10 @@ npm run dev
 
 | Metric              | Value   |
 | ------------------- | ------- |
-| Components          | 6       |
-| API Routes          | 7       |
-| Database Tables     | 7       |
-| Lines of Code       | ~1,500+ |
+| Components          | 5       |
+| API Routes          | 6       |
+| Database Tables     | 6       |
+| Lines of Code       | ~1,200+ |
 | Build Size          | 185 kB  |
 | Dev Dependencies    | 16      |
 | TypeScript Coverage | 100%    |

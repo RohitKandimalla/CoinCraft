@@ -11,8 +11,8 @@ interface PortfolioSummaryProps {
 export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
-        {[...Array(7)].map((_, i) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+        {[...Array(6)].map((_, i) => (
           <div key={i} className="h-40 bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse" />
         ))}
       </div>
@@ -23,7 +23,6 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
     return <div className="text-center text-gray-500">No portfolio data</div>;
   }
 
-  const gainIsPositive = (portfolio.totalUnrealizedGain || 0) >= 0;
   const equityPct =
     portfolio.totalValue > 0 ? (portfolio.equityValue / portfolio.totalValue) * 100 : 0;
   const cashPct = portfolio.totalValue > 0 ? (portfolio.cashValue / portfolio.totalValue) * 100 : 0;
@@ -35,9 +34,16 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
       : 'Set manually per account';
 
   const hasManualContribution = portfolio.netContributions != null;
+  const displayGain = hasManualContribution
+    ? Number(portfolio.accountGain ?? 0)
+    : Number(portfolio.totalUnrealizedGain ?? 0);
+  const displayGainPct = hasManualContribution
+    ? Number(portfolio.accountGainPct ?? 0)
+    : Number(portfolio.totalUnrealizedGainPct ?? 0);
+  const gainIsPositive = displayGain >= 0;
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
       {/* Total Value */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
         <p className="text-sm text-gray-600 dark:text-gray-400">Total Portfolio Value</p>
@@ -66,17 +72,6 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
         </p>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {cashPct.toFixed(1)}% of portfolio
-        </p>
-      </div>
-
-      {/* Net Capital in Current Holdings */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Current Holdings Cost Basis</p>
-        <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-violet-600 dark:text-violet-400 tabular-nums leading-tight">
-          ${portfolio.investedCapital.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-        </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Non-option positions cost basis minus margin used
         </p>
       </div>
 
@@ -117,7 +112,7 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
             className={`text-xl md:text-2xl xl:text-3xl font-bold tabular-nums leading-tight ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
           >
             $
-            {Math.abs(portfolio.totalUnrealizedGain || 0).toLocaleString('en-US', {
+            {Math.abs(displayGain).toLocaleString('en-US', {
               maximumFractionDigits: 2,
             })}
           </p>
@@ -131,11 +126,11 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
           className={`mt-1 text-xs ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
         >
           {gainIsPositive ? '+' : '-'}
-          {Math.abs(portfolio.totalUnrealizedGainPct || 0).toFixed(2)}%
+          {Math.abs(displayGainPct).toFixed(2)}%
         </p>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {hasManualContribution
-            ? 'Current portfolio value minus manual net contributions'
+            ? 'Current holdings value minus manual net contributions'
             : 'Based on current holdings cost basis'}
         </p>
       </div>

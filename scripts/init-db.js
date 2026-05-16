@@ -66,6 +66,26 @@ db.serialize(() => {
     }
   );
 
+  // Portfolio snapshots by dashboard view (overall/account tabs)
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS portfolio_snapshots_by_view (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      view_key TEXT NOT NULL,
+      total_value REAL NOT NULL,
+      equity_value REAL NOT NULL,
+      cash_value REAL NOT NULL,
+      snapshot_date DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(view_key, snapshot_date)
+    )
+  `,
+    (err) => {
+      if (err) console.error('Error creating portfolio_snapshots_by_view table:', err);
+      else console.log('✓ Portfolio snapshots by view table ready');
+    }
+  );
+
   // Stock notes
   db.run(
     `
@@ -178,49 +198,6 @@ db.serialize(() => {
     }
   );
 
-  // Investment transactions (for YOY calculations)
-  db.run(
-    `
-    CREATE TABLE IF NOT EXISTS investment_transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      plaid_transaction_id TEXT,
-      account_id TEXT,
-      ticker TEXT,
-      security_id TEXT,
-      date TEXT NOT NULL,
-      type TEXT,
-      subtype TEXT,
-      amount REAL,
-      quantity REAL,
-      price REAL,
-      fees REAL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `,
-    (err) => {
-      if (err) console.error('Error creating investment_transactions table:', err);
-      else console.log('✓ Investment transactions table ready');
-    }
-  );
-
-  // YOY returns cache
-  db.run(
-    `
-    CREATE TABLE IF NOT EXISTS yoy_returns (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      year INTEGER NOT NULL,
-      total_return_pct REAL NOT NULL,
-      start_value REAL,
-      end_value REAL,
-      calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(year)
-    )
-  `,
-    (err) => {
-      if (err) console.error('Error creating yoy_returns table:', err);
-      else console.log('✓ YOY returns table ready');
-    }
-  );
 
   // Manual contribution overrides per dashboard tab/view
   db.run(

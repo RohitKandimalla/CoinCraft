@@ -54,6 +54,19 @@ async function ensureSchema(db: any) {
     )
   `);
 
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS portfolio_snapshots_by_view (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      view_key TEXT NOT NULL,
+      total_value REAL NOT NULL,
+      equity_value REAL NOT NULL,
+      cash_value REAL NOT NULL,
+      snapshot_date DATE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(view_key, snapshot_date)
+    )
+  `);
+
   const accountColumns = await db.all(`PRAGMA table_info(accounts)`);
   const colNames = accountColumns.map((c: any) => c.name);
   if (!colNames.includes('account_category')) {
@@ -340,6 +353,58 @@ export async function POST() {
        VALUES (?, ?, ?, ?, ?, ?)`,
       [totalValue, equityValue, cashValue, totalUnrealizedGain, totalUnrealizedGainPct, today]
     );
+
+    const snapshotRows = [
+      {
+        viewKey: 'overall',
+        totalValue,
+        equityValue,
+        cashValue,
+      },
+    ];
+
+    const viewKeys = ['individual', 'roth_ira', 'joint', 'crypto'];
+    for (const viewKey of viewKeys) {
+      const accountIds = new Set(
+        syncResult.accounts
+          .filter((account: any) => classifyAccount(account) === viewKey)
+          .map((account: any) => account.account_id)
+      );
+
+      const viewEquityValue = syncResult.rawHoldings
+        .filter(
+          (holding: any) =>
+            holding.asset_type !== 'option' && accountIds.has(holding.provider_account_id)
+        )
+        .reduce((sum: number, holding: any) => sum + (holding.market_value || 0), 0);
+
+      const viewCashValue = Array.from(accountIds as Set<string>).reduce(
+        (sum: number, accountId) => sum + (syncResult.cashByAccount.get(accountId) || 0),
+        0
+      );
+
+      snapshotRows.push({
+        viewKey,
+        totalValue: viewEquityValue + viewCashValue,
+        equityValue: viewEquityValue,
+        cashValue: viewCashValue,
+      });
+    }
+
+    for (const snapshot of snapshotRows) {
+      await db.run(
+        `INSERT OR REPLACE INTO portfolio_snapshots_by_view
+         (view_key, total_value, equity_value, cash_value, snapshot_date)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          snapshot.viewKey,
+          snapshot.totalValue,
+          snapshot.equityValue,
+          snapshot.cashValue,
+          today,
+        ]
+      );
+    }
 
     // Update sync history
     await db.run(

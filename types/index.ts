@@ -75,21 +75,11 @@ export interface Account {
   updated_at: string;
 }
 
-export interface YOYReturn {
-  id: number;
-  year: number;
-  total_return_pct: number;
-  start_value?: number;
-  end_value?: number;
-  calculated_at: string;
-}
 
 export interface PortfolioData {
   totalValue: number;
   equityValue: number;
   cashValue: number;
-  investedCapital: number;
-  totalCostBasis: number;
   marginUsed: number;
   netContributions?: number;
   contributionOverride?: number | null;

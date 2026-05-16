@@ -42,6 +42,14 @@ export async function PUT(
 ) {
   try {
     const { viewKey } = await params;
+
+    if (viewKey === 'overall') {
+      return NextResponse.json(
+        { error: 'Overall baseline is derived from account-level overrides.' },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     const value = Number(body?.value);
 
@@ -76,6 +84,14 @@ export async function DELETE(
 ) {
   try {
     const { viewKey } = await params;
+
+    if (viewKey === 'overall') {
+      return NextResponse.json(
+        { error: 'Overall baseline is derived from account-level overrides.' },
+        { status: 400 }
+      );
+    }
+
     const db = await getDatabase();
     await ensureTable(db);
 

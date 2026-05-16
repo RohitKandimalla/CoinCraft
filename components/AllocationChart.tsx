@@ -5,9 +5,10 @@ import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recha
 
 interface AllocationChartProps {
   portfolio: PortfolioData | null;
+  onTickerClick?: (ticker: string) => void;
 }
 
-export function AllocationChart({ portfolio }: AllocationChartProps) {
+export function AllocationChart({ portfolio, onTickerClick }: AllocationChartProps) {
   if (!portfolio || portfolio.holdings.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
@@ -40,9 +41,16 @@ export function AllocationChart({ portfolio }: AllocationChartProps) {
     '#f97316',
   ];
 
+  const handlePieClick = (data: any) => {
+    if (onTickerClick) {
+      onTickerClick(data.name);
+    }
+  };
+
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Portfolio Allocation</h3>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Click on a segment to navigate to the holding</p>
 
       <ResponsiveContainer width="100%" height={300} className="mt-4">
         <PieChart>
@@ -55,6 +63,8 @@ export function AllocationChart({ portfolio }: AllocationChartProps) {
             outerRadius={80}
             fill="#8884d8"
             dataKey="value"
+            onClick={(e) => handlePieClick(e.payload)}
+            style={{ cursor: 'pointer' }}
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />

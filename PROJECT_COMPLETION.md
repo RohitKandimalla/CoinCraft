@@ -33,14 +33,13 @@
 ### SQLite Setup
 
 - ✅ Database initialized at `data/coincraft.db`
-- ✅ All 7 tables created and verified:
+- ✅ All 6 tables created and verified:
   - `holdings` — Current equity positions
   - `portfolio_snapshots` — Historical daily values
   - `stock_notes` — User annotations with tags
   - `sync_history` — Sync logs
   - `provider_tokens` — OAuth credentials (Plaid)
   - `accounts` — Bank/investment accounts
-  - `yoy_returns` — Year-over-year performance
 
 ### Database Utilities
 
@@ -111,7 +110,6 @@
 - ✅ `SyncHistory` — Sync log type
 - ✅ `ProviderToken` — OAuth token type
 - ✅ `Account` — Bank/investment account type
-- ✅ `YOYReturn` — Annual performance type
 - ✅ `PortfolioData` — Aggregated portfolio response
 - ✅ `PlaidLinkResponse` — Plaid link flow response
 
@@ -266,11 +264,10 @@
 
 ### Phase 3: Advanced Features
 
-1. YOY return calculations
-2. Performance charts
-3. CSV export
-4. Sector analysis
-5. Dividend tracking
+1. Performance charts
+2. CSV export
+3. Sector analysis
+4. Dividend tracking
 
 ### Phase 4: Cloud Deployment
 
@@ -285,10 +282,10 @@
 
 | Metric              | Count   |
 | ------------------- | ------- |
-| React Components    | 6       |
-| API Routes          | 7       |
-| TypeScript Types    | 9       |
-| Database Tables     | 7       |
+| React Components    | 5       |
+| API Routes          | 6       |
+| TypeScript Types    | 8       |
+| Database Tables     | 6       |
 | Configuration Files | 5       |
 | Helper Scripts      | 2       |
 | Documentation Files | 4       |
