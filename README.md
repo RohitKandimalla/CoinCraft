@@ -1,10 +1,17 @@
-# CoinCraft
-
-A custom Financial tracking application
-
 # CoinCraft — Local-First Portfolio Tracker
 
 A **secure, local-first** portfolio management application for tracking your investments (starting with Robinhood). Store all data locally, access advanced metrics and visualizations, and manage notes for each holding.
+
+## About this App
+
+CoinCraft is a personal investing dashboard built for people who want a clean, local-first way to monitor portfolio data.
+
+- Connects to Robinhood through Plaid
+- Syncs account/holdings data into a local SQLite database
+- Splits views by account (Individual, Roth IRA, Joint, Crypto)
+- Excludes options from core equity totals and shows them in a separate section
+- Tracks key metrics like holdings value, uninvested cash, margin used, and returns
+- Lets you add personal notes/tags/target prices per ticker
 
 ## Features
 
@@ -77,13 +84,15 @@ npm run dev
 
 The app will be available at `http://localhost:3000`.
 
-## Usage
+## How to Use
 
 ### Dashboard
 
 - **Refresh**: Click the refresh button to sync latest portfolio data from Robinhood/Plaid
-- **View Holdings**: Check current equity positions, allocation, and unrealized gains
-- **Cash Accounts**: See your joint/savings account balances at a glance
+- **Account Tabs**: Switch between Overall, Individual, Roth IRA, Joint, and Crypto views
+- **View Holdings**: Check current equity positions, allocation, unrealized gains, and average cost
+- **Options Section**: View sold puts/covered calls separately from your core portfolio totals
+- **Performance**: Use the Performance section to calculate YOY metrics from synced transaction history
 
 ### Stock Notes
 
@@ -97,45 +106,15 @@ The app will be available at `http://localhost:3000`.
 - Connect/disconnect your Robinhood account via Plaid
 - View database location (local storage path)
 
-## API Endpoints
+### Typical Daily Workflow
 
-| Endpoint                          | Method  | Purpose                                |
-| --------------------------------- | ------- | -------------------------------------- |
-| `/api/providers/plaid/exchange`   | POST    | Exchange public token for access token |
-| `/api/providers/plaid/status`     | GET     | Check Plaid connection status          |
-| `/api/providers/plaid/disconnect` | POST    | Disconnect Robinhood account           |
-| `/api/providers/plaid/portfolio`  | GET     | Fetch current portfolio data           |
-| `/api/sync`                       | POST    | Manually sync portfolio with Robinhood |
-| `/api/notes/[ticker]`             | GET/PUT | Retrieve or save notes for a ticker    |
+1. Open the dashboard
+2. Click **Refresh** to pull latest data
+3. Review account tabs and summary tiles
+4. Check options separately from core holdings
+5. Update notes/tags/target prices for tracked tickers
 
 ## Development
-
-### Project Structure
-
-```
-CoinCraft/
-├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   ├── page.tsx           # Dashboard
-│   ├── settings/          # Settings page
-│   ├── layout.tsx         # Root layout
-│   └── globals.css        # Global styles
-├── components/            # React components
-│   ├── Dashboard*
-│   ├── PortfolioSummary
-│   ├── AllocationChart
-│   ├── HoldingsTable
-│   ├── NotesModal
-│   └── Navigation
-├── lib/                   # Utilities
-│   ├── db.ts             # Database connection
-│   └── providers.ts      # Provider abstraction
-├── types/                # TypeScript types
-├── scripts/              # Setup scripts
-│   └── init-db.js       # Database initialization
-├── data/                 # Local SQLite database
-└── .env.local.*         # Environment config (NOT committed)
-```
 
 ### Adding a New Provider
 
@@ -165,27 +144,16 @@ npm run start
 npm run lint
 ```
 
-## Data Model
+## How this App is Secure
 
-### Holdings Table
+CoinCraft is designed with a local-first security model.
 
-Stores current equity positions with pricing and performance data.
-
-### Portfolio Snapshots
-
-Daily snapshots of portfolio value for historical tracking and YOY calculations.
-
-### Stock Notes
-
-User-created notes per ticker with tags and target prices.
-
-### Sync History
-
-Logs of all data synchronization attempts with errors.
-
-### Provider Tokens
-
-Secure storage of OAuth tokens and account IDs (local database only).
+- **Local-first by default**: Portfolio and notes data are stored in local SQLite (`data/coincraft.db`), not in a shared cloud database
+- **Secrets are not committed**: `.env.local` is ignored by Git via `.gitignore`
+- **Token handling**: Plaid access tokens are stored locally only (in your local DB)
+- **No browser token exposure**: Sensitive token exchange is done server-side through API routes
+- **Input validation and guarded API routes**: API handlers validate inputs and return controlled errors
+- **Portable but isolated**: Cloning on another machine requires re-adding local `.env.local`, which keeps credentials machine-specific
 
 ## Security Considerations
 
@@ -194,40 +162,6 @@ Secure storage of OAuth tokens and account IDs (local database only).
 - **HTTPS only** (future): For cloud deployment, enforce HTTPS and add API authentication
 - **Token management**: Access tokens are stored only in the local database; refresh tokens are handled securely
 - **Input validation**: All API inputs are validated before database operations
-
-## Roadmap
-
-### Phase 1 (Current)
-
-- [x] Core Next.js + SQLite foundation
-- [x] Plaid integration scaffold
-- [x] Dashboard with allocation chart
-- [x] Stock notes with tags and target prices
-- [x] Manual refresh + dashboard refresh on load
-- [x] Light/dark theme
-
-### Phase 2 (Upcoming)
-
-- [ ] Real Plaid holdings API integration (test with sandbox)
-- [ ] YOY return calculations from historical snapshots
-- [ ] Sector/industry grouping
-- [ ] Performance charting (returns over time)
-- [ ] CSV export
-
-### Phase 3 (Multi-user/Cloud)
-
-- [ ] User authentication
-- [ ] Multi-account support
-- [ ] Cloud deployment (AWS, Vercel, etc.)
-- [ ] Real-time sync option
-- [ ] Mobile companion app
-
-### Phase 4 (Advanced)
-
-- [ ] Support for other brokers (Charles Schwab, E\*TRADE, etc.)
-- [ ] Options and crypto support
-- [ ] Tax-loss harvesting suggestions
-- [ ] Dividends tracking and forecasting
 
 ## Troubleshooting
 
