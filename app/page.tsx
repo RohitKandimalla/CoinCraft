@@ -5,6 +5,8 @@ import { AccountPortfolioView, PortfolioResponse, StockNote } from '@/types';
 import { PortfolioSummary } from '@/components/PortfolioSummary';
 import { AllocationChart } from '@/components/AllocationChart';
 import { HoldingsTable } from '@/components/HoldingsTable';
+import { SectorAssetBreakdownChart } from '@/components/SectorAssetBreakdownChart';
+import { TopGainersLosersChart } from '@/components/TopGainersLosersChart';
 import { NotesModal } from '@/components/NotesModal';
 import { OptionsTable } from '@/components/OptionsTable';
 import { RefreshCw } from 'lucide-react';
@@ -437,9 +439,21 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {!isOverallView && (
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <SectorAssetBreakdownChart portfolio={selectedView?.portfolio || null} />
+          <TopGainersLosersChart portfolio={selectedView?.portfolio || null} />
+        </div>
+      )}
+
         {/* Holdings Table */}
        <div ref={tableRef}>
-         <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">Holdings</h2>
+         <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
+           Holdings
+           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-sm font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+             {selectedView?.portfolio.holdings.length || 0}
+           </span>
+         </h2>
          <HoldingsTable
            portfolio={selectedView?.portfolio || null}
            onEditNote={(ticker) => {
