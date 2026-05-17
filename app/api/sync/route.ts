@@ -80,6 +80,45 @@ interface SyncPortfolioResult {
   accounts: PlaidAccount[];
 }
 
+interface PlaidInvestmentTransaction {
+  investment_transaction_id: string;
+  account_id: string;
+  amount: number;
+  date: string;
+  type?: string;
+  subtype?: string;
+  name?: string;
+}
+
+interface PlaidInvestmentTransactionsResponse {
+  investment_transactions?: PlaidInvestmentTransaction[];
+  total_investment_transactions?: number;
+}
+
+interface ClassifiedCashflow {
+  transactionId: string;
+  accountId: string;
+  viewKey: string;
+  amount: number;
+  date: string;
+  classification: string;
+}
+
+interface PlaidInvestmentTransaction {
+  investment_transaction_id: string;
+  account_id: string;
+  amount: number;
+  date: string;
+  type?: string;
+  subtype?: string;
+  name?: string;
+}
+
+interface PlaidInvestmentTransactionsResponse {
+  investment_transactions?: PlaidInvestmentTransaction[];
+  total_investment_transactions?: number;
+}
+
 function classifyAccount(account: PlaidAccount): string {
   const name = String(account.name || '').toLowerCase();
   const subtype = String(account.subtype || '').toLowerCase();
@@ -215,6 +254,28 @@ async function ensureSchema(db: Database) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS contribution_deposit_events (
+      transaction_id TEXT PRIMARY KEY,
+      view_key TEXT NOT NULL,
+      amount REAL NOT NULL,
+      transaction_date DATE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS investment_cashflows (
+      transaction_id TEXT PRIMARY KEY,
+      view_key TEXT NOT NULL,
+      amount REAL NOT NULL,
+      transaction_date DATE NOT NULL,
+      classification TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 }
 
 async function getCachedSecurityMetadata(db: Database, ticker: string) {
@@ -296,6 +357,218 @@ async function getSecurityMetadata(db: Database, ticker: string) {
   }
 
   return { sector: null, industry: null };
+}
+
+async function fetchInvestmentTransactions(
+  accessToken: string,
+  startDate: string,
+  endDate: string
+): Promise<PlaidInvestmentTransaction[]> {
+  const plaidBaseUrl = getPlaidBaseUrl();
+  const transactions: PlaidInvestmentTransaction[] = [];
+
+  const pageSize = 100;
+  let offset = 0;
+  let total = Number.POSITIVE_INFINITY;
+
+  while (offset < total) {
+    const response = await fetch(`${plaidBaseUrl}/investments/transactions/get`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: clientId,
+        secret,
+        access_token: accessToken,
+        start_date: startDate,
+        end_date: endDate,
+        options: {
+          count: pageSize,
+          offset,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch investment transactions from Plaid');
+    }
+
+    const body = (await response.json()) as PlaidInvestmentTransactionsResponse;
+    const page = body.investment_transactions || [];
+    total = body.total_investment_transactions ?? page.length;
+    transactions.push(...page);
+    offset += page.length;
+
+    if (page.length === 0) {
+      break;
+    }
+  }
+
+  return transactions;
+}
+
+function classifyCashflowAmount(tx: PlaidInvestmentTransaction): {
+  include: boolean;
+  signedAmount: number;
+  classification: string;
+} {
+  if (!tx.investment_transaction_id) {
+    return { include: false, signedAmount: 0, classification: 'unknown' };
+  }
+
+  const rawAmount = Number(tx.amount || 0);
+  if (!Number.isFinite(rawAmount) || rawAmount === 0) {
+    return { include: false, signedAmount: 0, classification: 'unknown' };
+  }
+
+  const type = String(tx.type || '').toLowerCase();
+  const subtype = String(tx.subtype || '').toLowerCase();
+  const name = String(tx.name || '').toLowerCase();
+  const blob = `${type} ${subtype} ${name}`;
+
+  const excludeKeywords = ['buy', 'sell', 'dividend', 'interest', 'fee', 'tax', 'reinvest'];
+  if (excludeKeywords.some((keyword) => blob.includes(keyword))) {
+    return { include: false, signedAmount: 0, classification: 'non_external' };
+  }
+
+  const depositKeywords = [
+    'deposit',
+    'contribution',
+    'cash in',
+    'transfer in',
+    'wire in',
+    'ach credit',
+    'rollover in',
+    'incoming',
+  ];
+  if (depositKeywords.some((keyword) => blob.includes(keyword))) {
+    return {
+      include: true,
+      signedAmount: Math.abs(rawAmount),
+      classification: 'deposit',
+    };
+  }
+
+  const withdrawalKeywords = [
+    'withdraw',
+    'distribution',
+    'cash out',
+    'transfer out',
+    'wire out',
+    'ach debit',
+    'outgoing',
+  ];
+  if (withdrawalKeywords.some((keyword) => blob.includes(keyword))) {
+    return {
+      include: true,
+      signedAmount: -Math.abs(rawAmount),
+      classification: 'withdrawal',
+    };
+  }
+
+  return { include: false, signedAmount: 0, classification: 'unknown' };
+}
+
+async function syncCashflowsAndBaselines(
+  db: Database,
+  accessToken: string,
+  accounts: PlaidAccount[]
+): Promise<void> {
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+  startDate.setFullYear(startDate.getFullYear() - 10);
+
+  let transactions: PlaidInvestmentTransaction[] = [];
+  try {
+    transactions = await fetchInvestmentTransactions(
+      accessToken,
+      startDate.toISOString().split('T')[0],
+      endDate.toISOString().split('T')[0]
+    );
+  } catch (error) {
+    // Keep sync resilient when investment transactions are unavailable for institution/account.
+    console.warn('Skipping cashflow sync/baseline auto-update:', error);
+    return;
+  }
+
+  if (transactions.length === 0) {
+    return;
+  }
+
+  const accountCategoryById = new Map<string, string>();
+  for (const account of accounts) {
+    accountCategoryById.set(account.account_id, classifyAccount(account));
+  }
+
+  const overrideRows = await db.all<Array<{ view_key: string }>>(
+    'SELECT view_key FROM contribution_overrides'
+  );
+  const overrideKeys = new Set(overrideRows.map((row) => row.view_key));
+
+  const newlyAddedDepositsByView = new Map<string, number>();
+  const normalizedCashflows: ClassifiedCashflow[] = [];
+
+  for (const tx of transactions) {
+    const classification = classifyCashflowAmount(tx);
+    if (!classification.include) continue;
+
+    const viewKey = accountCategoryById.get(tx.account_id) || 'other';
+    const flow: ClassifiedCashflow = {
+      transactionId: tx.investment_transaction_id,
+      accountId: tx.account_id,
+      viewKey,
+      amount: classification.signedAmount,
+      date: tx.date,
+      classification: classification.classification,
+    };
+    normalizedCashflows.push(flow);
+
+    await db.run(
+      `
+      INSERT INTO investment_cashflows (transaction_id, view_key, amount, transaction_date, classification, updated_at)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(transaction_id) DO UPDATE SET
+        view_key = excluded.view_key,
+        amount = excluded.amount,
+        transaction_date = excluded.transaction_date,
+        classification = excluded.classification,
+        updated_at = CURRENT_TIMESTAMP
+    `,
+      [flow.transactionId, flow.viewKey, flow.amount, flow.date, flow.classification]
+    );
+
+    if (!overrideKeys.has(viewKey) || flow.amount <= 0) {
+      continue;
+    }
+
+    const existingEvent = await db.get<{ transaction_id: string } | undefined>(
+      'SELECT transaction_id FROM contribution_deposit_events WHERE transaction_id = ?',
+      [flow.transactionId]
+    );
+    if (existingEvent) {
+      continue;
+    }
+
+    await db.run(
+      `
+      INSERT INTO contribution_deposit_events (transaction_id, view_key, amount, transaction_date)
+      VALUES (?, ?, ?, ?)
+    `,
+      [flow.transactionId, viewKey, flow.amount, flow.date]
+    );
+
+    newlyAddedDepositsByView.set(viewKey, (newlyAddedDepositsByView.get(viewKey) || 0) + flow.amount);
+  }
+
+  for (const [viewKey, depositAmount] of newlyAddedDepositsByView.entries()) {
+    await db.run(
+      `
+      UPDATE contribution_overrides
+      SET value = value + ?, updated_at = CURRENT_TIMESTAMP
+      WHERE view_key = ?
+    `,
+      [depositAmount, viewKey]
+    );
+  }
 }
 
 async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<SyncPortfolioResult> {
@@ -490,6 +763,7 @@ export async function POST() {
 
     // Sync portfolio
     const syncResult = await syncPlaidPortfolio(tokenRecord.access_token, db);
+    await syncCashflowsAndBaselines(db, tokenRecord.access_token, syncResult.accounts);
     const holdings = syncResult.holdings;
 
     await db.run(`DELETE FROM holdings_by_account`);

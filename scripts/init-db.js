@@ -218,6 +218,42 @@ db.serialize(() => {
     }
   );
 
+  // Auto-detected contribution/deposit events (deduped by transaction ID)
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS contribution_deposit_events (
+      transaction_id TEXT PRIMARY KEY,
+      view_key TEXT NOT NULL,
+      amount REAL NOT NULL,
+      transaction_date DATE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+    (err) => {
+      if (err) console.error('Error creating contribution_deposit_events table:', err);
+      else console.log('✓ Contribution deposit events table ready');
+    }
+  );
+
+  // Normalized external cashflows used for calendar-year return calculations
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS investment_cashflows (
+      transaction_id TEXT PRIMARY KEY,
+      view_key TEXT NOT NULL,
+      amount REAL NOT NULL,
+      transaction_date DATE NOT NULL,
+      classification TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+    (err) => {
+      if (err) console.error('Error creating investment_cashflows table:', err);
+      else console.log('✓ Investment cashflows table ready');
+    }
+  );
+
   // Cached ticker metadata from public market data providers
   db.run(
     `

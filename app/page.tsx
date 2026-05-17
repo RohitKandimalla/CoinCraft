@@ -7,6 +7,7 @@ import { AllocationChart } from '@/components/AllocationChart';
 import { HoldingsTable } from '@/components/HoldingsTable';
 import { SectorAssetBreakdownChart } from '@/components/SectorAssetBreakdownChart';
 import { TopGainersLosersChart } from '@/components/TopGainersLosersChart';
+import { CalendarYOYTable } from '@/components/CalendarYOYTable';
 import { NotesModal } from '@/components/NotesModal';
 import { OptionsTable } from '@/components/OptionsTable';
 import { RefreshCw } from 'lucide-react';
@@ -441,6 +442,8 @@ export default function Dashboard() {
           <TopGainersLosersChart portfolio={selectedView?.portfolio || null} />
         </div>
       )}
+
+      {selectedView && !isOverallView && <CalendarYOYTable viewKey={String(selectedView.key)} />}
 
         {/* Holdings Table */}
        <div ref={tableRef}>

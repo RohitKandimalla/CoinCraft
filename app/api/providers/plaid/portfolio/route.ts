@@ -121,9 +121,9 @@ function applyContributionOverride(
     };
   }
 
-  // Compare manual net contributions against invested holdings value (not cash-inclusive total).
-  const gain = portfolio.equityValue - overrideValue;
-  const gainPct = overrideValue > 0 ? (gain / overrideValue) * 100 : 0;
+   // Compare manual net contributions against total portfolio value (holdings + cash).
+   const gain = portfolio.totalValue - overrideValue;
+   const gainPct = overrideValue > 0 ? (gain / overrideValue) * 100 : 0;
 
   return {
     ...portfolio,

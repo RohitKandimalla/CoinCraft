@@ -163,7 +163,7 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
           </p>
           <p className={footerClass}>
             {hasManualContribution
-              ? 'Current holdings value minus manual net contributions'
+              ? 'Total portfolio value minus manual net contributions (includes cash)'
               : 'Based on current holdings cost basis'}
           </p>
         </div>
