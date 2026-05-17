@@ -6,6 +6,14 @@ import { getPlaidBaseUrl } from '@/lib/plaid';
 const clientId = process.env.PLAID_CLIENT_ID;
 const secret = process.env.PLAID_SECRET;
 
+function normalizeCategoryKey(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40);
+}
+
 interface PlaidAccount {
   account_id: string;
   name?: string;
@@ -76,12 +84,28 @@ function classifyAccount(account: PlaidAccount): string {
   const name = String(account.name || '').toLowerCase();
   const subtype = String(account.subtype || '').toLowerCase();
   const type = String(account.type || '').toLowerCase();
+  const combined = `${name} ${subtype}`;
 
-  if (subtype.includes('roth') || name.includes('roth')) return 'roth_ira';
-  if (subtype.includes('crypto') || type.includes('crypto') || name.includes('crypto'))
-    return 'crypto';
-  if (name.includes('joint') || subtype.includes('joint')) return 'joint';
+  if (combined.includes('roth')) return 'roth_ira';
+  if (combined.includes('401k') || combined.includes('401(k)')) return 'k_401';
+  if (combined.includes('traditional ira')) return 'traditional_ira';
+  if (combined.includes('ira')) return 'ira';
+  if (combined.includes('hsa')) return 'hsa';
+  if (combined.includes('529')) return 'plan_529';
+  if (combined.includes('crypto') || type.includes('crypto')) return 'crypto';
+  if (combined.includes('joint')) return 'joint';
+
+  if (subtype) {
+    const normalizedSubtype = normalizeCategoryKey(subtype);
+    if (normalizedSubtype) return normalizedSubtype;
+  }
+
   if (type === 'investment') return 'individual';
+  if (type) {
+    const normalizedType = normalizeCategoryKey(type);
+    if (normalizedType) return normalizedType;
+  }
+
   return 'other';
 }
 

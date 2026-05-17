@@ -8,6 +8,28 @@ function sumNumbers(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0);
 }
 
+function getCategoryLabel(categoryKey: string): string {
+  const labelByKey: Record<string, string> = {
+    individual: 'Individual Account',
+    roth_ira: 'Roth IRA',
+    joint: 'Joint Account',
+    crypto: 'Crypto',
+    k_401: '401(k)',
+    ira: 'IRA',
+    traditional_ira: 'Traditional IRA',
+    hsa: 'HSA',
+    plan_529: '529 Plan',
+  };
+
+  if (labelByKey[categoryKey]) {
+    return labelByKey[categoryKey];
+  }
+
+  return categoryKey
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 function aggregateHoldingsByTicker(holdings: Holding[]): Holding[] {
   const grouped = new Map<string, Holding>();
 
@@ -166,12 +188,36 @@ export async function GET() {
 
     const accountViews: AccountPortfolioView[] = [];
 
-    const categoryTabs = [
-      { key: 'individual', label: 'Individual Account' },
-      { key: 'roth_ira', label: 'Roth IRA' },
-      { key: 'joint', label: 'Joint Account' },
-      { key: 'crypto', label: 'Crypto' },
+    const preferredOrder = [
+      'individual',
+      'roth_ira',
+      'traditional_ira',
+      'ira',
+      'k_401',
+      'joint',
+      'crypto',
+      'hsa',
+      'plan_529',
+      'other',
     ];
+
+    const discoveredCategories = Array.from(
+      new Set(accounts.map((a) => (a.account_category || 'other').toString()))
+    );
+
+    const sortedCategories = [...discoveredCategories].sort((a, b) => {
+      const aIdx = preferredOrder.indexOf(a);
+      const bIdx = preferredOrder.indexOf(b);
+      if (aIdx >= 0 && bIdx >= 0) return aIdx - bIdx;
+      if (aIdx >= 0) return -1;
+      if (bIdx >= 0) return 1;
+      return a.localeCompare(b);
+    });
+
+    const categoryTabs = sortedCategories.map((key) => ({
+      key,
+      label: getCategoryLabel(key),
+    }));
 
     for (const tab of categoryTabs) {
       const categoryAccounts = accounts.filter((a) => (a.account_category || 'other') === tab.key);

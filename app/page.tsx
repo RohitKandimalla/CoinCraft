@@ -304,8 +304,8 @@ export default function Dashboard() {
             {isOverallView ? (
               <>
                 Overall baseline is automatically calculated as the sum of account-level baselines.
-                Update <span className="font-medium">Individual / Roth IRA / Joint / Crypto</span>{' '}
-                baselines to change Overall.
+                Update <span className="font-medium">account-level</span> baselines to change
+                Overall.
               </>
             ) : (
               <>

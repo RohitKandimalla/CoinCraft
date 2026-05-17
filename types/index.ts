@@ -100,7 +100,7 @@ export interface PortfolioData {
   lastUpdated: string;
 }
 
-export type AccountCategory = 'overall' | 'individual' | 'roth_ira' | 'joint' | 'crypto' | 'other';
+export type AccountCategory = string;
 export type AssetType = 'equity' | 'option' | 'crypto';
 
 export interface AccountPortfolioView {
