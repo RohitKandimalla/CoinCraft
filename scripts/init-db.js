@@ -29,6 +29,8 @@ db.serialize(() => {
       name TEXT,
       provider_account_id TEXT,
       asset_type TEXT,
+      sector TEXT,
+      industry TEXT,
       quantity REAL NOT NULL,
       current_price REAL NOT NULL,
       average_price REAL,
@@ -179,6 +181,8 @@ db.serialize(() => {
       account_name TEXT,
       account_category TEXT,
       asset_type TEXT,
+      sector TEXT,
+      industry TEXT,
       ticker TEXT NOT NULL,
       name TEXT,
       quantity REAL NOT NULL,
@@ -211,6 +215,23 @@ db.serialize(() => {
     (err) => {
       if (err) console.error('Error creating contribution_overrides table:', err);
       else console.log('✓ Contribution overrides table ready');
+    }
+  );
+
+  // Cached ticker metadata from public market data providers
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS security_metadata (
+      ticker TEXT PRIMARY KEY,
+      sector TEXT,
+      industry TEXT,
+      source TEXT,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+    (err) => {
+      if (err) console.error('Error creating security_metadata table:', err);
+      else console.log('✓ Security metadata table ready');
     }
   );
 

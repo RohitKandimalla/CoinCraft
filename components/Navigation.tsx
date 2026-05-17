@@ -2,6 +2,7 @@
 
 import { useTheme } from './ThemeProvider';
 import { Moon, Sun } from 'lucide-react';
+import Link from 'next/link';
 
 export function Navigation() {
   const { isDark, toggleTheme } = useTheme();
@@ -13,18 +14,18 @@ export function Navigation() {
           <div className="flex items-center space-x-8">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">CoinCraft</h1>
             <div className="hidden md:flex space-x-4">
-              <a
+              <Link
                 href="/"
                 className="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
               >
                 Dashboard
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/settings"
                 className="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
               >
                 Settings
-              </a>
+              </Link>
             </div>
           </div>
 

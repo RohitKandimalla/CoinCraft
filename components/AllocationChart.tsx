@@ -8,6 +8,14 @@ interface AllocationChartProps {
   onTickerClick?: (ticker: string) => void;
 }
 
+interface ChartSlicePayload {
+  name: string;
+}
+
+function isChartSlicePayload(value: unknown): value is ChartSlicePayload {
+  return typeof value === 'object' && value !== null && typeof (value as { name?: unknown }).name === 'string';
+}
+
 export function AllocationChart({ portfolio, onTickerClick }: AllocationChartProps) {
   if (!portfolio || portfolio.holdings.length === 0) {
     return (
@@ -41,9 +49,9 @@ export function AllocationChart({ portfolio, onTickerClick }: AllocationChartPro
     '#f97316',
   ];
 
-  const handlePieClick = (data: any) => {
-    if (onTickerClick) {
-      onTickerClick(data.name);
+  const handlePieClick = (payload: unknown) => {
+    if (onTickerClick && isChartSlicePayload(payload)) {
+      onTickerClick(payload.name);
     }
   };
 

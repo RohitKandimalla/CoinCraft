@@ -15,30 +15,46 @@ function toTitleCase(value: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function getConcentrationBucket(holding: PortfolioData['holdings'][number]) {
+  if (holding.asset_type === 'equity') {
+    if (holding.industry && holding.industry.trim()) return holding.industry.trim();
+    if (holding.sector && holding.sector.trim()) return holding.sector.trim();
+    return 'Unknown Equity Industry';
+  }
+
+  if (holding.asset_type === 'crypto') return 'Crypto';
+  if (holding.asset_type === 'option') return 'Options';
+  return holding.asset_type ? toTitleCase(holding.asset_type) : 'Unclassified';
+}
+
 export function SectorAssetBreakdownChart({ portfolio }: SectorAssetBreakdownChartProps) {
   if (!portfolio || portfolio.holdings.length === 0) {
     return null;
   }
 
-  const grouped = new Map<string, number>();
+  const grouped = new Map<string, { value: number; tickers: Set<string> }>();
 
   for (const holding of portfolio.holdings) {
-    const key =
-      (holding.sector && holding.sector.trim()) ||
-      (holding.asset_type ? toTitleCase(holding.asset_type) : 'Unclassified');
-
-    grouped.set(key, (grouped.get(key) || 0) + (holding.market_value || 0));
+    const key = getConcentrationBucket(holding);
+    const current = grouped.get(key) || { value: 0, tickers: new Set<string>() };
+    current.value += holding.market_value || 0;
+    current.tickers.add(holding.ticker);
+    grouped.set(key, current);
   }
 
   const data = Array.from(grouped.entries())
-    .map(([name, value]) => ({ name, value }))
+    .map(([name, entry]) => ({
+      name,
+      value: entry.value,
+      tickers: Array.from(entry.tickers).sort(),
+    }))
     .sort((a, b) => b.value - a.value);
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sector / Asset Type Breakdown</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Industry Concentration</h3>
       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        Grouped by sector when available, otherwise by asset type.
+        Grouped by industry for equities; non-equities are grouped by category.
       </p>
 
       <ResponsiveContainer width="100%" height={320} className="mt-4">
@@ -56,19 +72,27 @@ export function SectorAssetBreakdownChart({ portfolio }: SectorAssetBreakdownCha
         </PieChart>
       </ResponsiveContainer>
 
-      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {data.map((item, index) => {
           const pct = portfolio.equityValue > 0 ? (item.value / portfolio.equityValue) * 100 : 0;
           return (
-            <div key={item.name} className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                />
-                {item.name}
-              </span>
-              <span className="font-medium text-gray-900 dark:text-white">{pct.toFixed(1)}%</span>
+            <div
+              key={item.name}
+              className="rounded-md border border-gray-100 bg-gray-50/70 p-2 text-sm dark:border-gray-800 dark:bg-gray-900/60"
+            >
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  />
+                  {item.name}
+                </span>
+                <span className="font-medium text-gray-900 dark:text-white">{pct.toFixed(1)}%</span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                {item.tickers.join(', ')}
+              </p>
             </div>
           );
         })}

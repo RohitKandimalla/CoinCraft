@@ -1,4 +1,4 @@
-import { PortfolioData, Holding, Account } from '@/types';
+import { PortfolioData } from '@/types';
 
 export interface PortfolioProvider {
   name: string;

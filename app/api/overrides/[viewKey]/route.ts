@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Database } from 'sqlite';
 import { getDatabase } from '@/lib/db';
 
-async function ensureTable(db: any) {
+async function ensureTable(db: Database) {
   await db.run(`
     CREATE TABLE IF NOT EXISTS contribution_overrides (
       view_key TEXT PRIMARY KEY,
@@ -50,8 +51,8 @@ export async function PUT(
       );
     }
 
-    const body = await request.json();
-    const value = Number(body?.value);
+    const body = (await request.json()) as { value?: unknown };
+    const value = Number(body.value);
 
     if (!Number.isFinite(value) || value < 0) {
       return NextResponse.json(

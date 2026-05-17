@@ -3,6 +3,7 @@ export interface Holding {
   ticker: string;
   name: string;
   sector?: string;
+  industry?: string;
   provider_account_id?: string;
   account_name?: string;
   account_category?: AccountCategory;

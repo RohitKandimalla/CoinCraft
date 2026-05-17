@@ -2,9 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/db';
 import { getPlaidBaseUrl } from '@/lib/plaid';
 
+interface PlaidExchangeResponse {
+  access_token: string;
+  item_id: string;
+}
+
+interface PlaidAccount {
+  account_id: string;
+  name: string;
+  type: string;
+  subtype?: string;
+  balances?: {
+    current?: number;
+  };
+}
+
+interface PlaidAccountsResponse {
+  accounts: PlaidAccount[];
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as { public_token?: string };
     const { public_token } = body;
 
     if (!public_token) {
@@ -37,7 +56,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to exchange public token' }, { status: 500 });
     }
 
-    const plaidData = await plaidResponse.json();
+    const plaidData = (await plaidResponse.json()) as PlaidExchangeResponse;
     const { access_token, item_id } = plaidData;
 
     // Get accounts from Plaid
@@ -51,8 +70,8 @@ export async function POST(request: NextRequest) {
       }),
     });
 
-    const accountsData = await accountsResponse.json();
-    const accountIds = accountsData.accounts.map((acc: any) => acc.account_id);
+    const accountsData = (await accountsResponse.json()) as PlaidAccountsResponse;
+    const accountIds = accountsData.accounts.map((acc) => acc.account_id);
 
     // Store in database
     const db = await getDatabase();

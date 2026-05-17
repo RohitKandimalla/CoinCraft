@@ -146,11 +146,7 @@ export default function Dashboard() {
       selectedView.portfolio.contributionOverride ?? selectedView.portfolio.netContributions ?? 0;
     setManualBaselineInput(current.toFixed(2));
     setBaselineMessage(null);
-  }, [
-    selectedView?.key,
-    selectedView?.portfolio?.contributionOverride,
-    selectedView?.portfolio?.netContributions,
-  ]);
+  }, [selectedView]);
 
   const handleSaveBaselineOverride = async () => {
     if (!selectedView) return;
@@ -313,7 +309,7 @@ export default function Dashboard() {
               </>
             ) : (
               <>
-                Paste your Robinhood "initial amount" for{' '}
+                Paste your Robinhood &quot;initial amount&quot; for{' '}
                 <span className="font-medium">{selectedView.label}</span>. CoinCraft will use it as
                 net contributions and recalculate gain %.
               </>

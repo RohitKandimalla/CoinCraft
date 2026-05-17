@@ -32,6 +32,14 @@ function aggregateHoldingsByTicker(holdings: Holding[]): Holding[] {
       existing.cost_basis && existing.cost_basis !== 0
         ? ((existing.unrealized_gain || 0) / existing.cost_basis) * 100
         : 0;
+
+    if (!existing.sector && holding.sector) {
+      existing.sector = holding.sector;
+    }
+
+    if (!existing.industry && holding.industry) {
+      existing.industry = holding.industry;
+    }
   }
 
   return Array.from(grouped.values()).sort((a, b) => b.market_value - a.market_value);

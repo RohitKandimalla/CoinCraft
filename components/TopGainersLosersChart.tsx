@@ -15,7 +15,6 @@ export function TopGainersLosersChart({ portfolio }: TopGainersLosersChartProps)
   const gainers = [...portfolio.holdings]
     .filter((holding) => (holding.unrealized_gain_pct || 0) > 0)
     .sort((a, b) => (b.unrealized_gain_pct || 0) - (a.unrealized_gain_pct || 0))
-    .slice(0, 5)
     .map((holding) => ({
       ticker: holding.ticker,
       gainPct: Number((holding.unrealized_gain_pct || 0).toFixed(2)),
@@ -25,12 +24,14 @@ export function TopGainersLosersChart({ portfolio }: TopGainersLosersChartProps)
   const losers = [...portfolio.holdings]
     .filter((holding) => (holding.unrealized_gain_pct || 0) < 0)
     .sort((a, b) => (a.unrealized_gain_pct || 0) - (b.unrealized_gain_pct || 0))
-    .slice(0, 5)
     .map((holding) => ({
       ticker: holding.ticker,
       gainPct: Number((holding.unrealized_gain_pct || 0).toFixed(2)),
       gainValue: holding.unrealized_gain || 0,
     }));
+
+  const gainersHeight = Math.max(220, gainers.length * 32 + 40);
+  const losersHeight = Math.max(220, losers.length * 32 + 40);
 
   if (gainers.length === 0 && losers.length === 0) {
     return null;
@@ -47,7 +48,7 @@ export function TopGainersLosersChart({ portfolio }: TopGainersLosersChartProps)
         <div>
           <h4 className="mb-2 text-sm font-semibold text-green-700 dark:text-green-400">Top Gainers</h4>
           {gainers.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={gainersHeight}>
               <BarChart data={gainers} layout="vertical" margin={{ left: 12, right: 12 }}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                 <XAxis type="number" tickFormatter={(value) => `${value}%`} />
@@ -79,7 +80,7 @@ export function TopGainersLosersChart({ portfolio }: TopGainersLosersChartProps)
         <div>
           <h4 className="mb-2 text-sm font-semibold text-red-700 dark:text-red-400">Top Losers</h4>
           {losers.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={losersHeight}>
               <BarChart data={losers} layout="vertical" margin={{ left: 12, right: 12 }}>
                 <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                 <XAxis type="number" tickFormatter={(value) => `${value}%`} />

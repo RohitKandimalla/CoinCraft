@@ -41,75 +41,107 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
     ? Number(portfolio.accountGainPct ?? 0)
     : Number(portfolio.totalUnrealizedGainPct ?? 0);
   const gainIsPositive = displayGain >= 0;
+  const cardClass =
+    'rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[220px] overflow-hidden';
+  const titleClass = 'text-sm text-gray-600 dark:text-gray-400 leading-snug';
+  const valueClass =
+    'text-lg md:text-xl 2xl:text-2xl font-bold tabular-nums leading-tight break-words';
+  const footerClass = 'text-xs text-gray-500 dark:text-gray-400 leading-snug';
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
       {/* Total Value */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Total Portfolio Value</p>
-        <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white tabular-nums leading-tight">
-          ${portfolio.totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-        </p>
-        <p className="mt-1 text-xs text-transparent select-none">.</p>
+      <div className={cardClass}>
+        <div className="h-12">
+          <p className={titleClass}>Total Portfolio Value</p>
+        </div>
+        <div className="mt-2 h-16 flex items-end overflow-hidden">
+          <p className={`${valueClass} text-gray-900 dark:text-white`}>
+            ${portfolio.totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className="mt-2 h-20 overflow-hidden">
+          <p className="text-xs text-transparent select-none">.</p>
+        </div>
       </div>
 
       {/* Equity Value */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Portfolio Holdings Value</p>
-        <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-blue-600 dark:text-blue-400 tabular-nums leading-tight">
-          ${portfolio.equityValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-        </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {equityPct.toFixed(1)}% of portfolio
-        </p>
+      <div className={cardClass}>
+        <div className="h-12">
+          <p className={titleClass}>Portfolio Holdings Value</p>
+        </div>
+        <div className="mt-2 h-16 flex items-end overflow-hidden">
+          <p className={`${valueClass} text-blue-600 dark:text-blue-400`}>
+            ${portfolio.equityValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className="mt-2 h-20 overflow-hidden">
+          <p className={footerClass}>{equityPct.toFixed(1)}% of portfolio</p>
+        </div>
       </div>
 
       {/* Cash */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Uninvested Cash</p>
-        <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-green-600 dark:text-green-400 tabular-nums leading-tight">
-          ${portfolio.cashValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-        </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {cashPct.toFixed(1)}% of portfolio
-        </p>
+      <div className={cardClass}>
+        <div className="h-12">
+          <p className={titleClass}>Uninvested Cash</p>
+        </div>
+        <div className="mt-2 h-16 flex items-end overflow-hidden">
+          <p className={`${valueClass} text-green-600 dark:text-green-400`}>
+            ${portfolio.cashValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className="mt-2 h-20 overflow-hidden">
+          <p className={footerClass}>{cashPct.toFixed(1)}% of portfolio</p>
+        </div>
       </div>
 
       {/* Margin Used */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Margin Used</p>
-        <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-amber-600 dark:text-amber-400 tabular-nums leading-tight">
-          ${portfolio.marginUsed.toLocaleString('en-US', { maximumFractionDigits: 2 })}
-        </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Borrowed buying power, excluded from cash
-        </p>
+      <div className={cardClass}>
+        <div className="h-12">
+          <p className={titleClass}>Margin Used</p>
+        </div>
+        <div className="mt-2 h-16 flex items-end overflow-hidden">
+          <p className={`${valueClass} text-amber-600 dark:text-amber-400`}>
+            ${portfolio.marginUsed.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+          </p>
+        </div>
+        <div className="mt-2 h-20 overflow-hidden">
+          <p className={footerClass}>Borrowed buying power, excluded from cash</p>
+        </div>
       </div>
 
       {/* Net Contributions (Manual) */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Net Contributions (Manual)</p>
-        <p className="mt-2 text-xl md:text-2xl xl:text-3xl font-bold text-cyan-600 dark:text-cyan-400 tabular-nums leading-tight">
-          {hasManualContribution
-            ? `$${Number(portfolio.netContributions).toLocaleString('en-US', {
-                maximumFractionDigits: 2,
-              })}`
-            : '—'}
-        </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{contributionRangeText}</p>
-        <p className="mt-1 text-xs text-gray-400">
-          Enter this value manually from Robinhood for accurate account baseline.
-        </p>
+      <div className={cardClass}>
+        <div className="h-12">
+          <p className={titleClass}>Net Contributions (Manual)</p>
+        </div>
+        <div className="mt-2 h-16 flex items-end overflow-hidden">
+          <p className={`${valueClass} text-cyan-600 dark:text-cyan-400`}>
+            {hasManualContribution
+              ? `$${Number(portfolio.netContributions).toLocaleString('en-US', {
+                  maximumFractionDigits: 2,
+                })}`
+              : '—'}
+          </p>
+        </div>
+        <div className="mt-2 h-20 overflow-hidden">
+          <p className={footerClass}>{contributionRangeText}</p>
+          <p className="text-xs text-gray-400 leading-snug">
+            Enter this value manually from Robinhood for accurate account baseline.
+          </p>
+        </div>
       </div>
 
       {/* Gain */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900 min-h-[170px] flex flex-col justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {hasManualContribution ? 'Account Gain vs Contributions' : 'Unrealized Gain (Holdings)'}
-        </p>
-        <div className="mt-2 flex items-center space-x-2">
+      <div className={cardClass}>
+        <div className="h-12">
+          <p className={titleClass}>
+            {hasManualContribution ? 'Account Gain vs Contributions' : 'Unrealized Gain (Holdings)'}
+          </p>
+        </div>
+        <div className="mt-2 h-16 flex items-end space-x-2 overflow-hidden">
           <p
-            className={`text-xl md:text-2xl xl:text-3xl font-bold tabular-nums leading-tight ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+            className={`${valueClass} ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
           >
             $
             {Math.abs(displayGain).toLocaleString('en-US', {
@@ -122,17 +154,19 @@ export function PortfolioSummary({ portfolio, loading }: PortfolioSummaryProps) 
             <TrendingDown size={24} className="text-red-600 dark:text-red-400" />
           )}
         </div>
-        <p
-          className={`mt-1 text-xs ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-        >
-          {gainIsPositive ? '+' : '-'}
-          {Math.abs(displayGainPct).toFixed(2)}%
-        </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          {hasManualContribution
-            ? 'Current holdings value minus manual net contributions'
-            : 'Based on current holdings cost basis'}
-        </p>
+        <div className="mt-2 h-20 overflow-hidden">
+          <p
+            className={`text-xs leading-snug ${gainIsPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+          >
+            {gainIsPositive ? '+' : '-'}
+            {Math.abs(displayGainPct).toFixed(2)}%
+          </p>
+          <p className={footerClass}>
+            {hasManualContribution
+              ? 'Current holdings value minus manual net contributions'
+              : 'Based on current holdings cost basis'}
+          </p>
+        </div>
       </div>
     </div>
   );

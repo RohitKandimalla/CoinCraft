@@ -1,7 +1,7 @@
 'use client';
 
 import { StockNote } from '@/types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 
 interface NotesModalProps {
@@ -24,14 +24,7 @@ export function NotesModal({ ticker, isOpen, onClose, onSave }: NotesModalProps)
   const [targetSellPrice, setTargetSellPrice] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    // Load existing notes when modal opens
-    if (isOpen) {
-      fetchNotes();
-    }
-  }, [isOpen, ticker]);
-
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
       const response = await fetch(`/api/notes/${ticker}`);
       if (response.ok) {
@@ -44,7 +37,14 @@ export function NotesModal({ ticker, isOpen, onClose, onSave }: NotesModalProps)
     } catch (error) {
       console.error('Error fetching notes:', error);
     }
-  };
+  }, [ticker]);
+
+  useEffect(() => {
+    // Load existing notes when modal opens
+    if (isOpen) {
+      fetchNotes();
+    }
+  }, [isOpen, fetchNotes]);
 
   const toggleTag = (tag: 'BUY' | 'SELL' | 'HOLD') => {
     setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
