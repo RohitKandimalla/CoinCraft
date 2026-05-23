@@ -330,7 +330,7 @@ async function fetchYahooAssetProfile(ticker: string) {
 
 async function getSecurityMetadata(db: Database, ticker: string) {
   const cached = await getCachedSecurityMetadata(db, ticker);
-  if (cached?.fresh && (cached.sector || cached.industry)) {
+  if (cached?.fresh && cached.sector) {
     return { sector: cached.sector, industry: cached.industry };
   }
 
@@ -651,10 +651,11 @@ async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<Sy
       profileByTicker.set(ticker, profile);
     }
 
+    // Prefer Yahoo metadata for consistent sector/industry labeling across holdings.
     const sector =
-      (typeof security.sector === 'string' && security.sector.trim()) || profile.sector || null;
+      profile.sector || (typeof security.sector === 'string' && security.sector.trim()) || null;
     const industry =
-      (typeof security.industry === 'string' && security.industry.trim()) || profile.industry || null;
+      profile.industry || (typeof security.industry === 'string' && security.industry.trim()) || null;
 
     rawHoldings.push({
       ticker,

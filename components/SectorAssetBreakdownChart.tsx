@@ -15,11 +15,24 @@ function toTitleCase(value: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function normalizeBroadEquityBucket(holding: PortfolioData['holdings'][number]) {
+  const sector = String(holding.sector || '').trim();
+  const industry = String(holding.industry || '').trim();
+
+  // Broad bucket comes directly from provider sector metadata (Yahoo asset profile).
+  if (sector) {
+    return sector;
+  }
+
+  // If sector is unavailable, fall back to provider industry metadata.
+  if (industry) return industry;
+
+  return 'Other Equity';
+}
+
 function getConcentrationBucket(holding: PortfolioData['holdings'][number]) {
   if (holding.asset_type === 'equity') {
-    if (holding.industry && holding.industry.trim()) return holding.industry.trim();
-    if (holding.sector && holding.sector.trim()) return holding.sector.trim();
-    return 'Unknown Equity Industry';
+    return normalizeBroadEquityBucket(holding);
   }
 
   if (holding.asset_type === 'crypto') return 'Crypto';
@@ -52,9 +65,9 @@ export function SectorAssetBreakdownChart({ portfolio }: SectorAssetBreakdownCha
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Industry Concentration</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Broad Concentration</h3>
       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        Grouped by industry for equities; non-equities are grouped by category.
+        Equities are grouped from third-party sector metadata at sync time (industry fallback), and non-equities are grouped by category.
       </p>
 
       <ResponsiveContainer width="100%" height={320} className="mt-4">

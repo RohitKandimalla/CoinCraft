@@ -15,7 +15,7 @@ export function Navigation() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">CoinCraft</h1>
             <div className="hidden md:flex space-x-4">
               <Link
-                href="/"
+                href="/dashboard/overall"
                 className="text-gray-700 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
               >
                 Dashboard
