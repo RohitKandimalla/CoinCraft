@@ -271,6 +271,43 @@ db.serialize(() => {
     }
   );
 
+  // Persisted Yahoo Finance news feed for owned equities
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS equity_news_articles (
+      url TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      publisher TEXT,
+      source TEXT NOT NULL DEFAULT 'yahoo_finance',
+      published_at TEXT,
+      discovered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      is_read INTEGER NOT NULL DEFAULT 0,
+      read_at TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+    (err) => {
+      if (err) console.error('Error creating equity_news_articles table:', err);
+      else console.log('✓ Equity news articles table ready');
+    }
+  );
+
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS equity_news_mentions (
+      article_url TEXT NOT NULL,
+      ticker TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY(article_url, ticker),
+      FOREIGN KEY(article_url) REFERENCES equity_news_articles(url)
+    )
+  `,
+    (err) => {
+      if (err) console.error('Error creating equity_news_mentions table:', err);
+      else console.log('✓ Equity news mentions table ready');
+    }
+  );
+
 
   console.log('✓ Database initialization complete');
 });

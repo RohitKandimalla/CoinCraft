@@ -9,6 +9,8 @@ CoinCraft is a local-first investing dashboard that connects to Robinhood (via P
 - Keep options in a separate section from core holdings
 - Track metrics like holdings value, uninvested cash, margin used, and returns
 - Add notes, tags, and target prices per ticker
+- Read a personalized Yahoo Finance news feed for owned equities only
+- Get unread news notifications and mark as read by opening the article
 
 ## Quick start (about 60 seconds)
 
@@ -54,6 +56,7 @@ Use `production` for `PLAID_ENV` and `NEXT_PUBLIC_PLAID_ENV` when using live Pla
 3. Switch tabs for each account (Overall, Individual, Roth IRA, Joint, Crypto)
 4. Review core holdings, options, and summary tiles
 5. Add notes/tags/target prices from the holdings table
+6. Open **News** to see ticker-specific headlines from Yahoo Finance
 
 ## Security
 

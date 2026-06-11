@@ -115,6 +115,17 @@ export interface PortfolioResponse {
   accountViews: AccountPortfolioView[];
 }
 
+export interface EquityNewsArticle {
+  url: string;
+  title: string;
+  publisher: string | null;
+  publishedAt: string | null;
+  discoveredAt: string;
+  isRead: boolean;
+  readAt: string | null;
+  tickers: string[];
+}
+
 export interface PlaidLinkResponse {
   public_token: string;
   metadata: {
@@ -132,3 +143,47 @@ export interface PlaidLinkResponse {
     }>;
   };
 }
+
+export interface StockSearchResult {
+  symbol: string;
+  name: string;
+  exchange: string | null;
+  quoteType: string | null;
+}
+
+export interface StockFinancialSnapshot {
+  year: string;
+  revenue: number | null;
+  grossProfit: number | null;
+  operatingIncome: number | null;
+  netIncome: number | null;
+  operatingCashflow: number | null;
+  freeCashflow: number | null;
+}
+
+export interface StockResearchData {
+  symbol: string;
+  companyName: string;
+  currency: string | null;
+  currentPrice: number | null;
+  marketCap: number | null;
+  sharesOutstanding: number | null;
+  trailingPE: number | null;
+  forwardPE: number | null;
+  trailingEps: number | null;
+  forwardEps: number | null;
+  revenueTtm: number | null;
+  grossProfit: number | null;
+  operatingIncome: number | null;
+  netIncome: number | null;
+  operatingCashflow: number | null;
+  freeCashflow: number | null;
+  totalCash: number | null;
+  totalDebt: number | null;
+  returnOnEquity: number | null;
+  operatingMargins: number | null;
+  profitMargins: number | null;
+  beta: number | null;
+  annualHistory: StockFinancialSnapshot[];
+}
+

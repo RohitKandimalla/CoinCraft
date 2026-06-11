@@ -78,6 +78,16 @@ interface SyncPortfolioResult {
   cashByAccount: Map<string, number>;
   marginUsedByAccount: Map<string, number>;
   accounts: PlaidAccount[];
+  cashDiagnosticsByAccount: Map<
+    string,
+    {
+      explicitCash: number;
+      impliedCash: number;
+      nonCashValue: number;
+      accountBalance: number | null;
+      sources: string[];
+    }
+  >;
 }
 
 interface PlaidInvestmentTransaction {
@@ -95,6 +105,47 @@ interface PlaidInvestmentTransactionsResponse {
   total_investment_transactions?: number;
 }
 
+interface PlaidApiErrorPayload {
+  error_code?: string;
+  error_type?: string;
+  error_message?: string;
+  display_message?: string | null;
+}
+
+class InvestmentTransactionsUnavailableError extends Error {
+  plaidCode?: string;
+  status?: number;
+
+  constructor(message: string, status?: number, plaidCode?: string) {
+    super(message);
+    this.name = 'InvestmentTransactionsUnavailableError';
+    this.status = status;
+    this.plaidCode = plaidCode;
+  }
+}
+
+async function parsePlaidError(response: Response): Promise<PlaidApiErrorPayload | null> {
+  try {
+    return (await response.json()) as PlaidApiErrorPayload;
+  } catch {
+    return null;
+  }
+}
+
+function isCashLikeHolding(security: PlaidSecurity, ticker: string): boolean {
+  const securityType = String(security.type || '').toLowerCase();
+  const nameBlob = `${security.name || ''} ${security.official_name || ''} ${security.security_id || ''}`.toLowerCase();
+  const normalizedTicker = String(ticker || '').toUpperCase();
+
+  if (normalizedTicker === 'CUR:USD' || /^CUR:[A-Z]{3}$/.test(normalizedTicker)) return true;
+  if (normalizedTicker === 'USD' || normalizedTicker === 'US DOLLAR') return true;
+  if (securityType.includes('cash') || securityType.includes('currency') || securityType.includes('sweep')) {
+    return true;
+  }
+
+  return /(cash|currency|money market|sweep)/i.test(nameBlob);
+}
+
 interface ClassifiedCashflow {
   transactionId: string;
   accountId: string;
@@ -102,6 +153,12 @@ interface ClassifiedCashflow {
   amount: number;
   date: string;
   classification: string;
+}
+
+interface CashflowSyncStatus {
+  skipped: boolean;
+  reason?: string;
+  plaidCode?: string;
 }
 
 interface PlaidInvestmentTransaction {
@@ -389,7 +446,14 @@ async function fetchInvestmentTransactions(
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch investment transactions from Plaid');
+      const plaidError = await parsePlaidError(response);
+      const code = plaidError?.error_code;
+      const message =
+        plaidError?.display_message ||
+        plaidError?.error_message ||
+        `Plaid returned status ${response.status}`;
+
+      throw new InvestmentTransactionsUnavailableError(message, response.status, code);
     }
 
     const body = (await response.json()) as PlaidInvestmentTransactionsResponse;
@@ -472,7 +536,7 @@ async function syncCashflowsAndBaselines(
   db: Database,
   accessToken: string,
   accounts: PlaidAccount[]
-): Promise<void> {
+): Promise<CashflowSyncStatus> {
   const endDate = new Date();
   const startDate = new Date(endDate);
   startDate.setFullYear(startDate.getFullYear() - 10);
@@ -486,12 +550,25 @@ async function syncCashflowsAndBaselines(
     );
   } catch (error) {
     // Keep sync resilient when investment transactions are unavailable for institution/account.
-    console.warn('Skipping cashflow sync/baseline auto-update:', error);
-    return;
+    if (error instanceof InvestmentTransactionsUnavailableError) {
+      const codeText = error.plaidCode ? ` (${error.plaidCode})` : '';
+      console.warn(`Skipping cashflow sync/baseline auto-update${codeText}: ${error.message}`);
+      return {
+        skipped: true,
+        reason: error.message,
+        plaidCode: error.plaidCode,
+      };
+    }
+
+    console.warn('Skipping cashflow sync/baseline auto-update due to unexpected error:', error);
+    return {
+      skipped: true,
+      reason: error instanceof Error ? error.message : 'unknown_error',
+    };
   }
 
   if (transactions.length === 0) {
-    return;
+    return { skipped: false };
   }
 
   const accountCategoryById = new Map<string, string>();
@@ -569,6 +646,8 @@ async function syncCashflowsAndBaselines(
       [depositAmount, viewKey]
     );
   }
+
+  return { skipped: false };
 }
 
 async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<SyncPortfolioResult> {
@@ -610,6 +689,17 @@ async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<Sy
   // Separate CUR:USD (uninvested cash) from equity holdings.
   const cashByAccount = new Map<string, number>();
   const marginUsedByAccount = new Map<string, number>();
+  const nonCashValueByAccount = new Map<string, number>();
+  const cashDiagnosticsByAccount = new Map<
+    string,
+    {
+      explicitCash: number;
+      impliedCash: number;
+      nonCashValue: number;
+      accountBalance: number | null;
+      sources: string[];
+    }
+  >();
   const rawHoldings: SyncedHoldingRow[] = [];
   const profileByTicker = new Map<string, { sector: string | null; industry: string | null }>();
 
@@ -618,7 +708,7 @@ async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<Sy
     const account = accountsById.get(holding.account_id) || { account_id: holding.account_id };
     const accountCategory = classifyAccount(account);
     const ticker = security.ticker_symbol || security.security_id || holding.security_id;
-    const isCash = ticker === 'CUR:USD' || security.type === 'cash';
+    const isCash = isCashLikeHolding(security, ticker);
 
     if (isCash) {
       const amount = Math.abs(holding.institution_value ?? holding.quantity ?? 0);
@@ -630,6 +720,17 @@ async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<Sy
       } else {
         const existing = cashByAccount.get(holding.account_id) || 0;
         cashByAccount.set(holding.account_id, existing + amount);
+
+        const existingDiag = cashDiagnosticsByAccount.get(holding.account_id) || {
+          explicitCash: 0,
+          impliedCash: 0,
+          nonCashValue: 0,
+          accountBalance: null,
+          sources: [],
+        };
+        existingDiag.explicitCash += amount;
+        existingDiag.sources.push(`holding:${ticker}`);
+        cashDiagnosticsByAccount.set(holding.account_id, existingDiag);
       }
       continue;
     }
@@ -637,6 +738,8 @@ async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<Sy
     const name = security.name || security.official_name || ticker;
     const price = holding.institution_price ?? security.close_price ?? 0;
     const marketValue = holding.institution_value ?? holding.quantity * price;
+    const nonCashExisting = nonCashValueByAccount.get(holding.account_id) || 0;
+    nonCashValueByAccount.set(holding.account_id, nonCashExisting + marketValue);
     const costBasis = holding.cost_basis ?? null;
     const unrealizedGain = costBasis !== null ? marketValue - costBasis : null;
     const unrealizedGainPct =
@@ -674,6 +777,45 @@ async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<Sy
       unrealized_gain: unrealizedGain,
       unrealized_gain_pct: unrealizedGainPct,
     });
+  }
+
+  // Some institutions do not label cash holdings cleanly in /investments/holdings/get.
+  // Backfill cash from account balance residual only when we have no explicit cash for that account.
+  for (const account of holdingsData.accounts || []) {
+    const accountId = account.account_id;
+    const diag = cashDiagnosticsByAccount.get(accountId) || {
+      explicitCash: cashByAccount.get(accountId) || 0,
+      impliedCash: 0,
+      nonCashValue: nonCashValueByAccount.get(accountId) || 0,
+      accountBalance: null,
+      sources: [],
+    };
+
+    if ((cashByAccount.get(accountId) || 0) > 0) {
+      diag.accountBalance =
+        Number.isFinite(Number(account.balances?.current)) ? Number(account.balances?.current) : null;
+      diag.nonCashValue = nonCashValueByAccount.get(accountId) || 0;
+      cashDiagnosticsByAccount.set(accountId, diag);
+      continue;
+    }
+
+    const balance = Number(account.balances?.current);
+    if (!Number.isFinite(balance)) {
+      cashDiagnosticsByAccount.set(accountId, diag);
+      continue;
+    }
+
+    const nonCashValue = nonCashValueByAccount.get(accountId) || 0;
+    const impliedCash = balance - nonCashValue;
+    if (impliedCash > 0.01) {
+      cashByAccount.set(accountId, impliedCash);
+      diag.impliedCash = impliedCash;
+      diag.sources.push('balance_residual');
+    }
+
+    diag.accountBalance = balance;
+    diag.nonCashValue = nonCashValue;
+    cashDiagnosticsByAccount.set(accountId, diag);
   }
 
   const aggregatedByTicker = new Map<string, SyncedHoldingRow>();
@@ -721,11 +863,13 @@ async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<Sy
     cashByAccount,
     marginUsedByAccount,
     accounts: holdingsData.accounts || [],
+    cashDiagnosticsByAccount,
   };
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const debugMode = new URL(request.url).searchParams.get('debug') === '1';
     const db = await getDatabase();
     await ensureSchema(db);
 
@@ -764,7 +908,7 @@ export async function POST() {
 
     // Sync portfolio
     const syncResult = await syncPlaidPortfolio(tokenRecord.access_token, db);
-    await syncCashflowsAndBaselines(db, tokenRecord.access_token, syncResult.accounts);
+    const cashflowStatus = await syncCashflowsAndBaselines(db, tokenRecord.access_token, syncResult.accounts);
     const holdings = syncResult.holdings;
 
     await db.run(`DELETE FROM holdings_by_account`);
@@ -943,6 +1087,25 @@ export async function POST() {
       holdingsCount: holdings.length,
       holdingLotsCount: syncResult.rawHoldings.length,
       totalValue,
+      warnings: cashflowStatus.skipped
+        ? [
+            {
+              type: 'cashflow_sync_skipped',
+              plaidCode: cashflowStatus.plaidCode || null,
+              message: cashflowStatus.reason || 'Cashflow sync skipped',
+            },
+          ]
+        : [],
+      ...(debugMode
+        ? {
+            debug: {
+              cashByAccount: Object.fromEntries(syncResult.cashByAccount.entries()),
+              marginUsedByAccount: Object.fromEntries(syncResult.marginUsedByAccount.entries()),
+              cashDiagnosticsByAccount: Object.fromEntries(syncResult.cashDiagnosticsByAccount.entries()),
+              cashflowSync: cashflowStatus,
+            },
+          }
+        : {}),
     });
   } catch (error) {
     console.error('Error syncing portfolio:', error);

@@ -1,12 +1,13 @@
 import { DashboardPage } from '@/components/DashboardPage';
 
 interface DashboardByViewPageProps {
-  params: {
+  params: Promise<{
     viewKey: string;
-  };
+  }>;
 }
 
-export default function DashboardByViewPage({ params }: DashboardByViewPageProps) {
-  return <DashboardPage initialViewKey={decodeURIComponent(params.viewKey || 'overall')} />;
+export default async function DashboardByViewPage({ params }: DashboardByViewPageProps) {
+  const resolvedParams = await params;
+  return <DashboardPage initialViewKey={decodeURIComponent(resolvedParams.viewKey || 'overall')} />;
 }
 
