@@ -779,44 +779,45 @@ async function syncPlaidPortfolio(accessToken: string, db: Database): Promise<Sy
     });
   }
 
-  // Some institutions do not label cash holdings cleanly in /investments/holdings/get.
-  // Backfill cash from account balance residual only when we have no explicit cash for that account.
-  for (const account of holdingsData.accounts || []) {
-    const accountId = account.account_id;
-    const diag = cashDiagnosticsByAccount.get(accountId) || {
-      explicitCash: cashByAccount.get(accountId) || 0,
-      impliedCash: 0,
-      nonCashValue: nonCashValueByAccount.get(accountId) || 0,
-      accountBalance: null,
-      sources: [],
-    };
+   // Some institutions do not label cash holdings cleanly in /investments/holdings/get.
+   // Backfill cash from account balance residual only when we have no explicit cash for that account.
+   for (const account of holdingsData.accounts || []) {
+     const accountId = account.account_id;
+     const diag = cashDiagnosticsByAccount.get(accountId) || {
+       explicitCash: cashByAccount.get(accountId) || 0,
+       impliedCash: 0,
+       nonCashValue: nonCashValueByAccount.get(accountId) || 0,
+       accountBalance: null,
+       sources: [],
+     };
 
-    if ((cashByAccount.get(accountId) || 0) > 0) {
-      diag.accountBalance =
-        Number.isFinite(Number(account.balances?.current)) ? Number(account.balances?.current) : null;
-      diag.nonCashValue = nonCashValueByAccount.get(accountId) || 0;
-      cashDiagnosticsByAccount.set(accountId, diag);
-      continue;
-    }
+     if ((cashByAccount.get(accountId) || 0) > 0) {
+       diag.accountBalance =
+         Number.isFinite(Number(account.balances?.current)) ? Number(account.balances?.current) : null;
+       diag.nonCashValue = nonCashValueByAccount.get(accountId) || 0;
+       cashDiagnosticsByAccount.set(accountId, diag);
+       continue;
+     }
 
-    const balance = Number(account.balances?.current);
-    if (!Number.isFinite(balance)) {
-      cashDiagnosticsByAccount.set(accountId, diag);
-      continue;
-    }
+     const balance = Number(account.balances?.current);
+     if (!Number.isFinite(balance)) {
+       cashDiagnosticsByAccount.set(accountId, diag);
+       continue;
+     }
 
-    const nonCashValue = nonCashValueByAccount.get(accountId) || 0;
-    const impliedCash = balance - nonCashValue;
-    if (impliedCash > 0.01) {
-      cashByAccount.set(accountId, impliedCash);
-      diag.impliedCash = impliedCash;
-      diag.sources.push('balance_residual');
-    }
+     const nonCashValue = nonCashValueByAccount.get(accountId) || 0;
+     const marginUsed = marginUsedByAccount.get(accountId) || 0;
+     const impliedCash = balance - nonCashValue - marginUsed;
+     if (impliedCash > 0.01) {
+       cashByAccount.set(accountId, impliedCash);
+       diag.impliedCash = impliedCash;
+       diag.sources.push('balance_residual');
+     }
 
-    diag.accountBalance = balance;
-    diag.nonCashValue = nonCashValue;
-    cashDiagnosticsByAccount.set(accountId, diag);
-  }
+     diag.accountBalance = balance;
+     diag.nonCashValue = nonCashValue;
+     cashDiagnosticsByAccount.set(accountId, diag);
+   }
 
   const aggregatedByTicker = new Map<string, SyncedHoldingRow>();
 
